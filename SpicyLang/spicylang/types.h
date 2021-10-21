@@ -13,14 +13,15 @@ enum class TokenType {
     // single-character tokens
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
-    COLON,
+    COLON, LEFT_BRACKET, RIGHT_BRACKET,
     // one of two character tokens
     BANG, BANG_EQUAL,
     EQUAL, EQUAL_EQUAL,
     GREATER, GREATER_EQUAL,
     LESS, LESS_EQUAL,
+    APPEND, APPEND_FRONT,
     // literals
-    IDENTIFIER, STRING, NUMBER,
+    IDENTIFIER, STRING, NUMBER, LIST,
     // keywords
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,

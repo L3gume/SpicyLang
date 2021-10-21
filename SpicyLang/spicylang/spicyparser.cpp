@@ -79,8 +79,18 @@ ast::ExprPtrVariant SpicyParser::equality() {
 }
 
 ast::ExprPtrVariant SpicyParser::comparison() {
-    auto expr = term();
+    auto expr = append();
     while (match({TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL})) {
+        const auto& op = previous();
+        auto rhs = append();
+        expr = ast::createBinaryEPV(std::move(expr), op, std::move(rhs));
+    }
+    return expr;
+}
+
+ast::ExprPtrVariant SpicyParser::append() {
+    auto expr = term();
+    while (match({TokenType::APPEND, TokenType::APPEND_FRONT})) {
         const auto& op = previous();
         auto rhs = term();
         expr = ast::createBinaryEPV(std::move(expr), op, std::move(rhs));
@@ -125,6 +135,11 @@ ast::ExprPtrVariant SpicyParser::call() {
         } else if (match(TokenType::DOT)){
             const auto name = consume(TokenType::IDENTIFIER, "Expect prop name after '.'.");
             expr = ast::createGetEPV(std::move(expr), name);
+        } else if (match(TokenType::LEFT_BRACKET)) {
+            auto lbracket = previous();
+            auto idx = expression();
+            consume(TokenType::RIGHT_BRACKET, "Expect ']' after index.");
+            expr = ast::createIndexEPV(std::move(lbracket), std::move(expr), std::move(idx));
         } else {
             break;
         }
@@ -136,6 +151,7 @@ ast::ExprPtrVariant SpicyParser::primary() {
     if (match(TokenType::FALSE)) return ast::createLiteralEPV("false");
     if (match(TokenType::TRUE)) return ast::createLiteralEPV("true");
     if (match(TokenType::NIL)) return ast::createLiteralEPV("nil");
+    if (match(TokenType::LIST)) return ast::createLiteralEPV("<spicy_list>");
 
     if (match({TokenType::NUMBER, TokenType::STRING}))
         return ast::createLiteralEPV(previous().literal);

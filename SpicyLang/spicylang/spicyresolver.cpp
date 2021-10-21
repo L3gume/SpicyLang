@@ -169,6 +169,11 @@ void SpicyResolver::resolveSuperExpr(const ast::SuperExprPtr &expr) {
     resolveLocal(reinterpret_cast<uint64_t>(expr.get()), expr->keyword);
 }
 
+void SpicyResolver::resolveIndexExpr(const ast::IndexExprPtr& expr) {
+    resolve(expr->lst);
+    resolve(expr->idx);
+}
+
 struct StmtResolverVisitor {
     SpicyResolver* const resolver;
     explicit StmtResolverVisitor(SpicyResolver* resolver) : resolver(resolver) {}
@@ -205,6 +210,7 @@ struct ExprResolverVisitor {
     void operator()(const ast::SetExprPtr& expr) { resolver->resolveSetExpr(expr); }
     void operator()(const ast::ThisExprPtr& expr) { resolver->resolveThisExpr(expr); }
     void operator()(const ast::SuperExprPtr& expr) { resolver->resolveSuperExpr(expr); }
+    void operator()(const ast::IndexExprPtr& expr) { resolver->resolveIndexExpr(expr); }
 };
 
 void SpicyResolver::resolve(const ast::ExprPtrVariant &expr) {

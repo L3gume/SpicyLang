@@ -16,15 +16,26 @@ void checkUnaryNumOperand(Token op, const SpicyObj& rhs) {
     throw RuntimeError(op, "Operand must be a number.");
 }
 
-void checkBinaryNumOperands(Token op, const SpicyObj& rhs, const SpicyObj& lhs) {
+void checkBinaryNumOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs) {
     if (std::holds_alternative<double>(lhs) && std::holds_alternative<double>(rhs)) return;
     throw RuntimeError(op, "Operands must be numbers.");
 }
 
-void checkPlusOperands(Token op, const SpicyObj& rhs, const SpicyObj& lhs) {
+void checkPlusOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs) {
     if (std::holds_alternative<double>(lhs) && std::holds_alternative<double>(rhs)) return;
     if (std::holds_alternative<std::string>(lhs) && std::holds_alternative<std::string>(rhs)) return;
     throw RuntimeError(op, "Operands must be numbers or strings.");
+}
+
+void checkAppendOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs) {
+    if (op.type == TokenType::APPEND) {
+        if (!std::holds_alternative<SpicyListSharedPtr>(lhs))
+            throw RuntimeError(op, "Can only append elements to lists.");
+    }
+    else if (op.type == TokenType::APPEND_FRONT) {
+        if (!std::holds_alternative<SpicyListSharedPtr>(rhs))
+            throw RuntimeError(op, "Can only append elements to lists.");
+    }
 }
 }
 
@@ -34,6 +45,7 @@ SpicyObj getObjFromStringLit(const TokenLiteral& lit) {
     if (str == "true") return SpicyObj{true};
     if (str == "false") return SpicyObj{false};
     if (str == "nil") return SpicyObj{nullptr};
+    if (str == "<spicy_list>") return std::make_shared<SpicyList>();
     return SpicyObj{str};
 }
 /*
@@ -49,6 +61,10 @@ SpicyObj evalPlusBinOp(const SpicyObj& lval, const SpicyObj& rval) {
     return SpicyObj{nullptr};
 }
 } // namespace internal
+
+SpicyEvaluator::SpicyEvaluator() {
+    initBuiltins();
+}
 
 struct SpicyExprEvaluator {
     SpicyEvaluator* const eval;
@@ -68,11 +84,8 @@ struct SpicyExprEvaluator {
     [[nodiscard]] SpicyObj operator()(const ast::SetExprPtr& expr) { return eval->evalSetExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::ThisExprPtr& expr) { return eval->evalThisExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::SuperExprPtr& expr) { return eval->evalSuperExpr(expr); }
+    [[nodiscard]] SpicyObj operator()(const ast::IndexExprPtr& expr) { return eval->evalIndexExpr(expr); }
 };
-
-SpicyEvaluator::SpicyEvaluator() {
-    initBuiltins();
-}
 
 SpicyObj SpicyEvaluator::evalExpr(const ast::ExprPtrVariant& expr) {
     return std::visit(SpicyExprEvaluator(this), expr);
@@ -138,6 +151,18 @@ SpicyObj SpicyEvaluator::evalBinaryExpr(const ast::BinaryExprPtr &expr) {
         return !areEqual(lval, rval);
     case TokenType::EQUAL_EQUAL:
         return areEqual(lval, rval);
+    case TokenType::APPEND: {
+            typecheck::checkAppendOperands(expr->op, lval, rval);
+            auto lst = std::get<SpicyListSharedPtr>(lval);
+            lst->append(expr->op, rval);
+            return lst;
+        }
+    case TokenType::APPEND_FRONT: {
+            typecheck::checkAppendOperands(expr->op, lval, rval);
+            auto lst = std::get<SpicyListSharedPtr>(rval);
+            lst->appendFront(expr->op, lval);
+            return lst;
+        }
     default:
         throw RuntimeError(expr->op, "Unexpected operator in binary expression.");
     }
@@ -283,6 +308,16 @@ SpicyObj SpicyEvaluator::evalFuncExpr(const ast::FuncExprPtr &expr) {
     //const auto lambdaName = boost::uuids::to_string(expr->uuid);
     //const auto func = std::make_shared<FuncObj>(expr, "lambda", std::move(closure));
     return std::make_shared<FuncObj>(expr, "lambda", std::move(closure));
+}
+
+SpicyObj SpicyEvaluator::evalIndexExpr(const ast::IndexExprPtr& expr) {
+    const auto lstObj = evalExpr(expr->lst);
+    if (!std::holds_alternative<SpicyListSharedPtr>(lstObj))
+        throw RuntimeError(expr->lbracket, "Can only perform indexing operations on lists.");
+    const auto idxObj = evalExpr(expr->idx);
+    if (!std::holds_alternative<double>(idxObj))
+        throw RuntimeError(expr->lbracket, "Index expression must evaluate to a number.");
+    return std::get<SpicyListSharedPtr>(lstObj)->get(expr->lbracket, static_cast<int>(std::get<double>(idxObj)));
 }
 
 struct SpicyStmtExecutor {

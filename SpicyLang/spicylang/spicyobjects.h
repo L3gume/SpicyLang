@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <variant>
+#include <deque>
 
 #include "types.h"
 #include "spicyast.h"
@@ -26,10 +27,13 @@ using SpicyClassSharedPtr = std::shared_ptr<SpicyClass>;
 class SpicyInstance;
 using SpicyInstanceSharedPtr = std::shared_ptr<SpicyInstance>;
 
+class SpicyList;
+using SpicyListSharedPtr = std::shared_ptr<SpicyList>;
+
 using SpicyObj = std::variant<
     std::string, double, bool, std::nullptr_t,
     FuncSharedPtr, BuiltinFuncSharedPtr, SpicyClassSharedPtr,
-    SpicyInstanceSharedPtr>;
+    SpicyInstanceSharedPtr, SpicyListSharedPtr>;
 
 using OptSpicyObj = std::optional<SpicyObj>;
 
@@ -111,6 +115,21 @@ public:
     [[nodiscard]] SpicyObj get(const Token& fieldName) const;
     [[nodiscard]] SpicyObj get(const std::string& fieldName) const;
     void set(const Token& fieldName, SpicyObj value);
+};
+
+class SpicyList : public util::Uncopyable {
+    std::deque<SpicyObj> m_list;
+public:
+    void append(const Token& lstName, SpicyObj val);
+    void appendFront(const Token& lstName, SpicyObj val);
+    SpicyObj get(const Token& lstName, int idx);
+    SpicyObj back(const Token& lstName);
+    SpicyObj front(const Token& lstName);
+    SpicyObj indexOf(const SpicyObj& value);
+    
+    std::string toString();
+    
+    friend bool operator==(const SpicyList& lhs, const SpicyList& rhs);
 };
 
 } // namespace spicy

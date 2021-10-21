@@ -3,6 +3,7 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <format>
 
 #include "spicyast.h"
 #include "spicyscanner.h"
@@ -120,15 +121,13 @@ auto printFuncExpr(const FuncExprPtr& expr) -> std::string {
 
 auto printGetExpr(const GetExprPtr& expr) -> std::string {
     std::string str = printer::toString(expr->object);
-    str += " .( get " + expr->name.lexeme + " )";
-    return str;
+    return std::format("{}.( get {} )", str, expr->name.lexeme);
 }
 
 auto printSetExpr(const SetExprPtr& expr) -> std::string {
     std::string str = printer::toString(expr->object);
     std::string val = printer::toString(expr->value);
-    str += " .( set " + expr->name.lexeme + " ) = " + val;
-    return str;
+    return std::format("{}.( set {} ) = {}", str, expr->name.lexeme, val);
 }
 
 auto printThisExpr(const ThisExprPtr& expr) -> std::string {
@@ -136,7 +135,11 @@ auto printThisExpr(const ThisExprPtr& expr) -> std::string {
 }
 
 auto printSuperExpr(const SuperExprPtr& expr) -> std::string {
-    return "( super." + expr->method.toString() + " )";
+    return std::format("( super.{} )", expr->method.toString());
+}
+
+auto printIndexExpr(const IndexExprPtr& expr) -> std::string {
+    return std::format("( Indexing {}[{}] )", printer::toString(expr->lst), printer::toString(expr->idx));
 }
 }  // namespace 
 
@@ -200,6 +203,10 @@ struct ExprPtrPrintVisitor {
     [[nodiscard]]
     std::string operator()(const SuperExprPtr& expr) {
         return printSuperExpr(expr);
+    }
+    [[nodiscard]]
+    std::string operator()(const IndexExprPtr& expr) {
+        return printIndexExpr(expr);
     }
 };
 

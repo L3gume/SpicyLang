@@ -1,6 +1,75 @@
 #include "spicyobjects.h"
 
+#include <format>
+
 namespace spicy {
+
+bool areEqual(const SpicyObj &lhs, const SpicyObj &rhs) {
+    // if the indices aren't equal then they're obviously not equal
+    if (lhs.index() == rhs.index()) {
+        switch (lhs.index()) {
+        case 0:
+            return std::get<std::string>(lhs) == std::get<std::string>(rhs);
+        case 1:
+            return std::get<double>(lhs) == std::get<double>(rhs);
+        case 2:
+            return std::get<bool>(lhs) == std::get<bool>(rhs);
+        case 3:
+            return true;
+        case 4:
+            return std::get<FuncSharedPtr>(lhs)->getFuncName()
+                    == std::get<FuncSharedPtr>(rhs)->getFuncName();
+        case 5:
+            return std::get<BuiltinFuncSharedPtr>(lhs)->getFuncName()
+                    == std::get<BuiltinFuncSharedPtr>(rhs)->getFuncName();
+        case 6:
+            return std::get<SpicyClassSharedPtr>(lhs)->getClassName()
+                    == std::get<SpicyClassSharedPtr>(rhs)->getClassName();
+        case 7:
+            return std::get<SpicyInstanceSharedPtr>(lhs).get()
+                    == std::get<SpicyInstanceSharedPtr>(rhs).get();
+        case 8:
+            return *(std::get<SpicyListSharedPtr>(lhs).get())
+                    == *(std::get<SpicyListSharedPtr>(rhs).get());
+        default:
+        static_assert (std::variant_size_v<SpicyObj> == 9,
+            "SpicyObj cases missing in areEqual()!");
+        }
+    }
+    return false;
+}
+
+struct ObjectStringVisitor {
+    std::string operator()(const std::string& str) { return str; }
+    std::string operator()(const double& dbl) { return std::to_string(dbl); }
+    std::string operator()(const bool& bol) { return bol ? "true" : "false"; }
+    std::string operator()(const std::nullptr_t& nilptr) { return "nil"; }
+    std::string operator()(const FuncSharedPtr& ptr) { return ptr->isMethod() ? "<method " + ptr->getFuncName() + ">" : "<fn " + ptr->getFuncName() + ">"; }
+    std::string operator()(const BuiltinFuncSharedPtr& ptr) { return "<builtin " + ptr->getFuncName() + ">"; }
+    std::string operator()(const SpicyClassSharedPtr& ptr) { return ptr->getClassName(); }
+    std::string operator()(const SpicyInstanceSharedPtr& ptr) { return ptr->toString(); }
+    std::string operator()(const SpicyListSharedPtr& ptr) { return ptr->toString(); }
+};
+
+std::string getObjString(const SpicyObj &obj)
+{
+    return std::visit(ObjectStringVisitor{}, obj);
+}
+
+bool isTrue(const SpicyObj &obj)
+{
+    if (std::holds_alternative<std::nullptr_t>(obj)) return false;
+    if (std::holds_alternative<bool>(obj)) return std::get<bool>(obj);
+    if (std::holds_alternative<FuncSharedPtr>(obj))
+        return std::get<FuncSharedPtr>(obj) == nullptr;
+    if (std::holds_alternative<BuiltinFuncSharedPtr>(obj))
+        return std::get<BuiltinFuncSharedPtr>(obj) == nullptr;
+    if (std::holds_alternative<SpicyClassSharedPtr>(obj))
+        return std::get<SpicyClassSharedPtr>(obj) == nullptr;
+    if (std::holds_alternative<SpicyInstanceSharedPtr>(obj))
+        return std::get<SpicyInstanceSharedPtr>(obj) == nullptr;
+    return true;
+}
 
 // ======================== FuncObj ================================
 FuncObj::FuncObj(const ast::FuncExprPtr &decl, const std::string &funcName, std::shared_ptr<eval::Environment> closure, bool isMethod, bool isInit)
@@ -107,76 +176,56 @@ void SpicyInstance::set(const Token &fieldName, SpicyObj value) {
     m_fields.insert_or_assign(m_hasher(fieldName.lexeme), std::move(value));
 }
 
-bool areEqual(const SpicyObj &lhs, const SpicyObj &rhs) {
-    // if the indices aren't equal then they're obviously not equal
-    if (lhs.index() == rhs.index()) {
-        switch (lhs.index()) {
-        case 0:
-            return std::get<std::string>(lhs) == std::get<std::string>(rhs);
-        case 1:
-            return std::get<double>(lhs) == std::get<double>(rhs);
-        case 2:
-            return std::get<bool>(lhs) == std::get<bool>(rhs);
-        case 3:
-            return true;
-        case 4:
-            return std::get<FuncSharedPtr>(lhs)->getFuncName()
-                    == std::get<FuncSharedPtr>(rhs)->getFuncName();
-        case 5:
-            return std::get<BuiltinFuncSharedPtr>(lhs)->getFuncName()
-                    == std::get<BuiltinFuncSharedPtr>(rhs)->getFuncName();
-        case 6:
-            return std::get<SpicyClassSharedPtr>(lhs)->getClassName()
-                    == std::get<SpicyClassSharedPtr>(rhs)->getClassName();
-        case 7:
-            return std::get<SpicyInstanceSharedPtr>(lhs).get()
-                    == std::get<SpicyInstanceSharedPtr>(rhs).get();
-        default:
-        static_assert (std::variant_size_v<SpicyObj> == 8,
-            "SpicyObj cases missing in areEqual()!");
-        }
+void SpicyList::append(const Token& lstName, SpicyObj val) {
+    if (!m_list.empty() && m_list.front().index() != val.index()) {
+        throw RuntimeError(lstName, "All elements of a list must be of the same type.");
     }
-    return false;
+    m_list.emplace_back(val);
 }
 
-struct ObjectStringVisitor {
-    std::string operator()(const std::string& str) { return str; }
-    std::string operator()(const double& dbl) { return std::to_string(dbl); }
-    std::string operator()(const bool& bol) { return bol ? "true" : "false"; }
-    std::string operator()(const std::nullptr_t& nilptr) { return "nil"; }
-    std::string operator()(const FuncSharedPtr& ptr) { return ptr->isMethod() ? "<method " + ptr->getFuncName() + ">" : "<fn " + ptr->getFuncName() + ">"; }
-    std::string operator()(const BuiltinFuncSharedPtr& ptr) { return "<builtin " + ptr->getFuncName() + ">"; }
-    std::string operator()(const SpicyClassSharedPtr& ptr) { return ptr->getClassName(); }
-    std::string operator()(const SpicyInstanceSharedPtr& ptr) { return ptr->toString(); }
-};
-
-std::string getObjString(const SpicyObj &obj)
-{
-    return std::visit(ObjectStringVisitor{}, obj);
+void SpicyList::appendFront(const Token& lstName, SpicyObj val) {
+    if (!m_list.empty() && m_list.front().index() != val.index()) {
+        throw RuntimeError(lstName, "All elements of a list must be of the same type.");
+    }
+    m_list.emplace_front(val);
 }
 
-bool isTrue(const SpicyObj &obj)
-{
-    if (std::holds_alternative<std::nullptr_t>(obj)) return false;
-    if (std::holds_alternative<bool>(obj)) return std::get<bool>(obj);
-    if (std::holds_alternative<FuncSharedPtr>(obj))
-        return std::get<FuncSharedPtr>(obj) == nullptr;
-    if (std::holds_alternative<BuiltinFuncSharedPtr>(obj))
-        return std::get<BuiltinFuncSharedPtr>(obj) == nullptr;
-    if (std::holds_alternative<SpicyClassSharedPtr>(obj))
-        return std::get<SpicyClassSharedPtr>(obj) == nullptr;
-    if (std::holds_alternative<SpicyInstanceSharedPtr>(obj))
-        return std::get<SpicyInstanceSharedPtr>(obj) == nullptr;
-    return true;
+SpicyObj SpicyList::get(const Token& lstName, int idx) {
+    if (idx < 0 || idx >= m_list.size()) {
+        throw RuntimeError(lstName, std::format("Index '{}' out of bounds. Array size is {}", idx, m_list.size()));
+    }
+    return m_list[idx];
 }
 
+SpicyObj SpicyList::back(const Token& lstName) {
+    if (m_list.empty()) {
+        throw RuntimeError(lstName, "List is empty.");
+    }
+    return m_list.back();
+}
 
+SpicyObj SpicyList::front(const Token& lstName) {
+    if (m_list.empty()) {
+        throw RuntimeError(lstName, "List is empty.");
+    }
+    return m_list.front();
+}
 
+SpicyObj SpicyList::indexOf(const SpicyObj& value) {
+    return -1.0;
+}
 
+std::string SpicyList::toString() {
+    auto str = std::string{ "[" };
+    for (const auto& obj : m_list) {
+        str += getObjString(obj) + ", ";
+    }
+    if (m_list.size() > 0) str.erase(str.length() - 2);
+    return str + "]";
+}
 
-
-
-
-
+bool operator==(const SpicyList& lhs, const SpicyList& rhs) {
+    return lhs.m_list == rhs.m_list;
+}
 
 } // namespace spicy

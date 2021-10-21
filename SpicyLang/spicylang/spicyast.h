@@ -28,6 +28,7 @@ struct GetExpr;
 struct SetExpr;
 struct ThisExpr;
 struct SuperExpr;
+struct IndexExpr;
 
 // Expression pointer types
 using BinaryExprPtr = std::unique_ptr<BinaryExpr>;
@@ -45,12 +46,13 @@ using GetExprPtr = std::unique_ptr<GetExpr>;
 using SetExprPtr = std::unique_ptr<SetExpr>;
 using ThisExprPtr = std::unique_ptr<ThisExpr>;
 using SuperExprPtr = std::unique_ptr<SuperExpr>;
+using IndexExprPtr = std::unique_ptr<IndexExpr>;
 
 using ExprPtrVariant = std::variant<
     BinaryExprPtr, GroupingExprPtr, LiteralExprPtr, UnaryExprPtr,
     ConditionalExprPtr, PostfixExprPtr, VariableExprPtr, AssignExprPtr,
     LogicalExprPtr, CallExprPtr, FuncExprPtr, GetExprPtr,
-    SetExprPtr, ThisExprPtr, SuperExprPtr>;
+    SetExprPtr, ThisExprPtr, SuperExprPtr, IndexExprPtr>;
 
 // Statement types forward-declaration
 struct ExprStmt;
@@ -97,6 +99,7 @@ auto createGetEPV(ExprPtrVariant expr, spicy::Token name) -> ExprPtrVariant;
 auto createSetEPV(ExprPtrVariant expr, spicy::Token name, ExprPtrVariant value) -> ExprPtrVariant;
 auto createThisEPV(spicy::Token keyword) -> ExprPtrVariant;
 auto createSuperEPV(spicy::Token keyword, spicy::Token method) -> ExprPtrVariant;
+auto createIndexEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) -> ExprPtrVariant;
 
 // Helper functions to create StmtPtrVariants for each Stmt type
 auto createExprSPV(ExprPtrVariant expr) -> StmtPtrVariant;
@@ -201,6 +204,13 @@ struct SuperExpr final : public util::Uncopyable {
   spicy::Token keyword;
   spicy::Token method;
   explicit SuperExpr(spicy::Token keyword, spicy::Token method);
+};
+
+struct IndexExpr final : public util::Uncopyable {
+    Token lbracket;
+    ExprPtrVariant lst;
+    ExprPtrVariant idx;
+    explicit IndexExpr(Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx);
 };
 
 // Statment AST types;

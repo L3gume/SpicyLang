@@ -40,6 +40,7 @@ private:
     SpicyObj evalThisExpr(const ast::ThisExprPtr& expr);
     SpicyObj evalSuperExpr(const ast::SuperExprPtr& expr);
     SpicyObj evalFuncExpr(const ast::FuncExprPtr& expr);
+    SpicyObj evalIndexExpr(const ast::IndexExprPtr& expr);
 
     OptSpicyObj execExpressionStmt(const ast::ExprStmtPtr& stmt);
     OptSpicyObj execPrintStmt(const ast::PrintStmtPtr& stmt);
