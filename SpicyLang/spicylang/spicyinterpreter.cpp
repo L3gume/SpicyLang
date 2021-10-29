@@ -4,7 +4,6 @@
 #include <fstream>
 #include <streambuf>
 #include <optional>
-#include <fmt/format.h>
 
 #include "spicyscanner.h"
 #include "spicyparser.h"
@@ -34,6 +33,8 @@ void SpicyInterpreter::repl() {
     eval::SpicyResolver resolver(evaluator);
     std::cout << ">> ";
     std::getline( std::cin, line );
+    if (!line.ends_with(';'))
+        line += ";";
     while (line != "exit();") {
         SpicyScanner scanner(line);
         SpicyParser parser(scanner.scanTokens());
@@ -87,13 +88,6 @@ void SpicyInterpreter::interpret() {
         eval::SpicyResolver resolver(evaluator);
         resolver.resolve(m_program);
         evaluator.execStmts(m_program);
-    } catch (RuntimeError err) {
-        runtimeError(err);
-    }
-}
-
-void SpicyInterpreter::interpretAndPrint(const std::vector<ast::StmtPtrVariant>& ast) {
-    try {
     } catch (RuntimeError err) {
         runtimeError(err);
     }

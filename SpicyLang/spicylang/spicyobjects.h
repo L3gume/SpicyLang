@@ -123,9 +123,10 @@ public:
     void append(const Token& lstName, SpicyObj val);
     void appendFront(const Token& lstName, SpicyObj val);
     SpicyObj get(const Token& lstName, int idx);
+    SpicyObj set(const Token& lstName, int idx, SpicyObj val);
     SpicyObj back(const Token& lstName);
     SpicyObj front(const Token& lstName);
-    SpicyObj indexOf(const SpicyObj& value);
+    SpicyObj size();
     
     std::string toString();
     

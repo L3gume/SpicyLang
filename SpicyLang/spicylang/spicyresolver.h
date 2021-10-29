@@ -59,7 +59,8 @@ private:
     void resolveSetExpr(const ast::SetExprPtr& expr);
     void resolveThisExpr(const ast::ThisExprPtr& expr);
     void resolveSuperExpr(const ast::SuperExprPtr& expr);
-    void resolveIndexExpr(const ast::IndexExprPtr& expr);
+    void resolveIndexGetExpr(const ast::IndexGetExprPtr& expr);
+    void resolveIndexSetExpr(const ast::IndexSetExprPtr& expr);
 
     void resolve(const ast::ExprPtrVariant& expr);
     void resolveLocal(uint64_t exprAddr, Token name);

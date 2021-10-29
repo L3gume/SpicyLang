@@ -84,7 +84,8 @@ struct SpicyExprEvaluator {
     [[nodiscard]] SpicyObj operator()(const ast::SetExprPtr& expr) { return eval->evalSetExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::ThisExprPtr& expr) { return eval->evalThisExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::SuperExprPtr& expr) { return eval->evalSuperExpr(expr); }
-    [[nodiscard]] SpicyObj operator()(const ast::IndexExprPtr& expr) { return eval->evalIndexExpr(expr); }
+    [[nodiscard]] SpicyObj operator()(const ast::IndexGetExprPtr& expr) { return eval->evalIndexGetExpr(expr); }
+    [[nodiscard]] SpicyObj operator()(const ast::IndexSetExprPtr& expr) { return eval->evalIndexSetExpr(expr); }
 };
 
 SpicyObj SpicyEvaluator::evalExpr(const ast::ExprPtrVariant& expr) {
@@ -307,10 +308,10 @@ SpicyObj SpicyEvaluator::evalFuncExpr(const ast::FuncExprPtr &expr) {
     // make sure to use a UNIQUE name for lambdas
     //const auto lambdaName = boost::uuids::to_string(expr->uuid);
     //const auto func = std::make_shared<FuncObj>(expr, "lambda", std::move(closure));
-    return std::make_shared<FuncObj>(expr, "lambda", std::move(closure));
+    return std::make_shared<FuncObj>(expr, "___lambda", std::move(closure));
 }
 
-SpicyObj SpicyEvaluator::evalIndexExpr(const ast::IndexExprPtr& expr) {
+SpicyObj SpicyEvaluator::evalIndexGetExpr(const ast::IndexGetExprPtr& expr) {
     const auto lstObj = evalExpr(expr->lst);
     if (!std::holds_alternative<SpicyListSharedPtr>(lstObj))
         throw RuntimeError(expr->lbracket, "Can only perform indexing operations on lists.");
@@ -318,6 +319,18 @@ SpicyObj SpicyEvaluator::evalIndexExpr(const ast::IndexExprPtr& expr) {
     if (!std::holds_alternative<double>(idxObj))
         throw RuntimeError(expr->lbracket, "Index expression must evaluate to a number.");
     return std::get<SpicyListSharedPtr>(lstObj)->get(expr->lbracket, static_cast<int>(std::get<double>(idxObj)));
+}
+
+SpicyObj SpicyEvaluator::evalIndexSetExpr(const ast::IndexSetExprPtr& expr) {
+    const auto& lstObj = evalExpr(expr->lst);
+    if (!std::holds_alternative<SpicyListSharedPtr>(lstObj))
+        throw RuntimeError(expr->lbracket, "Can only perform indexing operations on lists.");
+    const auto idxObj = evalExpr(expr->idx);
+    if (!std::holds_alternative<double>(idxObj))
+        throw RuntimeError(expr->lbracket, "Index expression must evaluate to a number.");
+    const auto valObj = evalExpr(expr->val);
+    std::get<SpicyListSharedPtr>(lstObj)->set(expr->lbracket, static_cast<int>(std::get<double>(idxObj)), valObj);
+    return lstObj;
 }
 
 struct SpicyStmtExecutor {
@@ -343,7 +356,7 @@ OptSpicyObj SpicyEvaluator::execStmts(const std::vector<ast::StmtPtrVariant> &st
     try {
         for (const auto& st : stmts) {
             result = execStmt(st);
-            if (std::holds_alternative<ast::RetStmtPtr>(st)) break;
+            if (std::holds_alternative<ast::RetStmtPtr>(st) || result.has_value()) break;
         }
     }  catch (const RuntimeError& err) {
         runtimeError(err);
@@ -359,10 +372,13 @@ void SpicyEvaluator::initBuiltins() {
     m_envMgr.defineGlobal("clock", std::make_shared<ClockBuiltIn>());
     m_envMgr.defineGlobal("str", std::make_shared<StrBuiltIn>());
     m_envMgr.defineGlobal("sqrt", std::make_shared<SqrtBuiltIn>());
+    m_envMgr.defineGlobal("len", std::make_shared<LenBuiltIn>());
 }
 
 OptSpicyObj SpicyEvaluator::execExpressionStmt(const ast::ExprStmtPtr &stmt) {
-    return evalExpr(stmt->expression);
+    // TODO: need to hook in a value to determine if we're in a repl loop or not (?)
+    evalExpr(stmt->expression);
+    return std::nullopt;
 }
 
 OptSpicyObj SpicyEvaluator::execPrintStmt(const ast::PrintStmtPtr &stmt) {
@@ -403,7 +419,7 @@ OptSpicyObj SpicyEvaluator::execIfStmt(const ast::IfStmtPtr &stmt) {
 OptSpicyObj SpicyEvaluator::execWhileStmt(const ast::WhileStmtPtr &stmt) {
     OptSpicyObj result = std::nullopt;
     while (isTrue(evalExpr(stmt->condition)) && !result.has_value()) {
-        execStmt(stmt->loopBody);
+        result = execStmt(stmt->loopBody);
     }
     return result;
 }

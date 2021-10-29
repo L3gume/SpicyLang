@@ -37,11 +37,14 @@ ast::ExprPtrVariant SpicyParser::assignment() {
         const auto equals = previous();
         auto value = assignment();
         if (std::holds_alternative<ast::VariableExprPtr>(expr)) {
-            const auto name = std::get<ast::VariableExprPtr>(expr)->varName;
+            const auto& name = std::get<ast::VariableExprPtr>(expr)->varName;
             return ast::createAssignEPV(name, std::move(value));
         } else if (std::holds_alternative<ast::GetExprPtr>(expr)) {
-            auto get = std::move(std::get<ast::GetExprPtr>(expr));
+            const auto& get = std::get<ast::GetExprPtr>(expr);
             return ast::createSetEPV(std::move(get->object), get->name, std::move(value));
+        } else if (std::holds_alternative<ast::IndexGetExprPtr>(expr)) {
+            const auto& idxGet = std::get<ast::IndexGetExprPtr>(expr);
+            return ast::createIndexSetEPV(std::move(idxGet->lbracket), std::move(idxGet->lst), std::move(idxGet->idx), std::move(value));
         }
         error(equals, "Invalid assignment target.");
     }
@@ -139,7 +142,7 @@ ast::ExprPtrVariant SpicyParser::call() {
             auto lbracket = previous();
             auto idx = expression();
             consume(TokenType::RIGHT_BRACKET, "Expect ']' after index.");
-            expr = ast::createIndexEPV(std::move(lbracket), std::move(expr), std::move(idx));
+            expr = ast::createIndexGetEPV(std::move(lbracket), std::move(expr), std::move(idx));
         } else {
             break;
         }

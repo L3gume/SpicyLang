@@ -63,8 +63,11 @@ ThisExpr::ThisExpr(spicy::Token keyword) : keyword(std::move(keyword)) {}
 SuperExpr::SuperExpr(spicy::Token keyword, spicy::Token method)
     : keyword(std::move(keyword)), method(std::move(method)) {}
 
-IndexExpr::IndexExpr(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) 
+IndexGetExpr::IndexGetExpr(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) 
     : lbracket(std::move(lbracket)), lst(std::move(arr)), idx(std::move(idx)) {}
+
+IndexSetExpr::IndexSetExpr(Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx, ExprPtrVariant val) 
+    : lbracket(std::move(lbracket)), lst(std::move(arr)), idx(std::move(idx)), val(std::move(val)) {}
 
 // ==============================//
 // EPV creation helper functions //
@@ -138,8 +141,12 @@ auto createSuperEPV(spicy::Token keyword, spicy::Token method) -> ExprPtrVariant
   return std::make_unique<SuperExpr>(std::move(keyword), std::move(method));
 }
 
-auto createIndexEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) -> ExprPtrVariant {
-    return std::make_unique<IndexExpr>(std::move(lbracket), std::move(arr), std::move(idx));
+auto createIndexGetEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) -> ExprPtrVariant {
+    return std::make_unique<IndexGetExpr>(std::move(lbracket), std::move(arr), std::move(idx));
+}
+
+auto createIndexSetEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx, ExprPtrVariant val) -> ExprPtrVariant {
+    return std::make_unique<IndexSetExpr>(std::move(lbracket), std::move(arr), std::move(idx), std::move(val));
 }
 
 // =================== //
@@ -221,6 +228,5 @@ auto createClassSPV(spicy::Token className, std::optional<ExprPtrVariant> superC
   return std::make_unique<ClassStmt>(std::move(className),
                                      std::move(superClass), std::move(methods));
 }
-
 
 }

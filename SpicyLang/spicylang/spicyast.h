@@ -28,7 +28,8 @@ struct GetExpr;
 struct SetExpr;
 struct ThisExpr;
 struct SuperExpr;
-struct IndexExpr;
+struct IndexGetExpr;
+struct IndexSetExpr;
 
 // Expression pointer types
 using BinaryExprPtr = std::unique_ptr<BinaryExpr>;
@@ -46,13 +47,15 @@ using GetExprPtr = std::unique_ptr<GetExpr>;
 using SetExprPtr = std::unique_ptr<SetExpr>;
 using ThisExprPtr = std::unique_ptr<ThisExpr>;
 using SuperExprPtr = std::unique_ptr<SuperExpr>;
-using IndexExprPtr = std::unique_ptr<IndexExpr>;
+using IndexGetExprPtr = std::unique_ptr<IndexGetExpr>;
+using IndexSetExprPtr = std::unique_ptr<IndexSetExpr>;
 
 using ExprPtrVariant = std::variant<
     BinaryExprPtr, GroupingExprPtr, LiteralExprPtr, UnaryExprPtr,
     ConditionalExprPtr, PostfixExprPtr, VariableExprPtr, AssignExprPtr,
     LogicalExprPtr, CallExprPtr, FuncExprPtr, GetExprPtr,
-    SetExprPtr, ThisExprPtr, SuperExprPtr, IndexExprPtr>;
+    SetExprPtr, ThisExprPtr, SuperExprPtr, IndexGetExprPtr,
+    IndexSetExprPtr>;
 
 // Statement types forward-declaration
 struct ExprStmt;
@@ -99,7 +102,8 @@ auto createGetEPV(ExprPtrVariant expr, spicy::Token name) -> ExprPtrVariant;
 auto createSetEPV(ExprPtrVariant expr, spicy::Token name, ExprPtrVariant value) -> ExprPtrVariant;
 auto createThisEPV(spicy::Token keyword) -> ExprPtrVariant;
 auto createSuperEPV(spicy::Token keyword, spicy::Token method) -> ExprPtrVariant;
-auto createIndexEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) -> ExprPtrVariant;
+auto createIndexGetEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx) -> ExprPtrVariant;
+auto createIndexSetEPV(spicy::Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx, ExprPtrVariant val) -> ExprPtrVariant;
 
 // Helper functions to create StmtPtrVariants for each Stmt type
 auto createExprSPV(ExprPtrVariant expr) -> StmtPtrVariant;
@@ -206,11 +210,19 @@ struct SuperExpr final : public util::Uncopyable {
   explicit SuperExpr(spicy::Token keyword, spicy::Token method);
 };
 
-struct IndexExpr final : public util::Uncopyable {
+struct IndexGetExpr final : public util::Uncopyable {
     Token lbracket;
     ExprPtrVariant lst;
     ExprPtrVariant idx;
-    explicit IndexExpr(Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx);
+    explicit IndexGetExpr(Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx);
+};
+
+struct IndexSetExpr final : public util::Uncopyable {
+    Token lbracket;
+    ExprPtrVariant lst;
+    ExprPtrVariant idx;
+    ExprPtrVariant val;
+    explicit IndexSetExpr(Token lbracket, ExprPtrVariant arr, ExprPtrVariant idx, ExprPtrVariant val);
 };
 
 // Statment AST types;
