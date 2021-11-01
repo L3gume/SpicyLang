@@ -135,8 +135,12 @@ auto printSuperExpr(const SuperExprPtr& expr) -> std::string {
     return std::format("( super.{} )", expr->method.toString());
 }
 
-auto printIndexExpr(const IndexExprPtr& expr) -> std::string {
-    return std::format("( Indexing {}[{}] )", printer::toString(expr->lst), printer::toString(expr->idx));
+auto printIndexGetExpr(const IndexGetExprPtr& expr) -> std::string {
+    return std::format("( IndexGet {}[{}] )", printer::toString(expr->lst), printer::toString(expr->idx));
+}
+
+auto printIndexSetExpr(const IndexSetExprPtr& expr) -> std::string {
+    return std::format("( IndexSet {}[{}] = {} )", printer::toString(expr->lst), printer::toString(expr->idx), printer::toString(expr->val));
 }
 }  // namespace 
 
@@ -202,8 +206,12 @@ struct ExprPtrPrintVisitor {
         return printSuperExpr(expr);
     }
     [[nodiscard]]
-    std::string operator()(const IndexExprPtr& expr) {
-        return printIndexExpr(expr);
+    std::string operator()(const IndexGetExprPtr& expr) {
+        return printIndexGetExpr(expr);
+    }
+    [[nodiscard]]
+    std::string operator()(const IndexSetExprPtr& expr) {
+        return printIndexSetExpr(expr);
     }
 };
 

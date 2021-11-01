@@ -176,6 +176,7 @@ void SpicyInstance::set(const Token &fieldName, SpicyObj value) {
     m_fields.insert_or_assign(m_hasher(fieldName.lexeme), std::move(value));
 }
 
+// ======================= SpicyList ===========================
 void SpicyList::append(const Token& lstName, SpicyObj val) {
     if (!m_list.empty() && m_list.front().index() != val.index()) {
         throw RuntimeError(lstName, "All elements of a list must be of the same type.");
@@ -197,6 +198,14 @@ SpicyObj SpicyList::get(const Token& lstName, int idx) {
     return m_list[idx];
 }
 
+SpicyObj SpicyList::set(const Token& lstName, int idx, SpicyObj val) {
+    if (idx < 0 || idx >= m_list.size()) {
+        throw RuntimeError(lstName, std::format("Index '{}' out of bounds. Array size is {}", idx, m_list.size()));
+    }
+    m_list[idx] = val;
+    return nullptr;
+}
+
 SpicyObj SpicyList::back(const Token& lstName) {
     if (m_list.empty()) {
         throw RuntimeError(lstName, "List is empty.");
@@ -211,8 +220,8 @@ SpicyObj SpicyList::front(const Token& lstName) {
     return m_list.front();
 }
 
-SpicyObj SpicyList::indexOf(const SpicyObj& value) {
-    return -1.0;
+SpicyObj SpicyList::size() {
+    return SpicyObj(static_cast<double>(m_list.size()));
 }
 
 std::string SpicyList::toString() {

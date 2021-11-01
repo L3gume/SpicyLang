@@ -12,6 +12,7 @@
 namespace spicy {
 
 /* spicylang grammar (this language is essentially lox from the Crafting Interpreters book)
+    TODO: complete the grammar
 
     expression     → equality ;
     equality       → comparison ( ( "!=" | "==" ) comparison )* ;

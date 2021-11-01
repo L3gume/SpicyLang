@@ -33,6 +33,15 @@ public:
     std::string getFuncName() override;
 };
 
+class LenBuiltIn : public BuiltinFunc {
+public:
+    LenBuiltIn();
+    
+    size_t arity() override;
+    SpicyObj run() override;
+    std::string getFuncName() override;
+};
+
 } // namespace spicy
 
 #endif // SPICY_SPICYBUILTINS_H

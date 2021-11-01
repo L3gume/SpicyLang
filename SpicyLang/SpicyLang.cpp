@@ -4,9 +4,15 @@
 #include "spicylang/spicyinterpreter.h"
 
 int main(const int argc, const char* argv[]) {
-    spicy::SpicyInterpreter interpreter("");
-    std::cout << "== SpicyLang ==" << '\n';
-    std::cout << "version 0.1\n\n";
-    interpreter.repl();
+    if (argc == 1) {
+        spicy::SpicyInterpreter interpreter("");
+        std::cout << "== SpicyLang ==" << '\n';
+        std::cout << "version 0.1\n\n";
+        interpreter.repl();
+    } else {
+        auto scriptPath = std::string{ argv[1] };
+        spicy::SpicyInterpreter interpreter(scriptPath);
+        interpreter.run();
+    }
     return 0;
 }
