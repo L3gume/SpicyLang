@@ -15,9 +15,6 @@ namespace spicy::ast {
 //=========================//
 namespace {
     
-template<typename... Ts> struct overloaded : Ts... { using Ts::operator()...; };    
-template<typename... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-    
 struct LiteralPrintVisitor {
     [[nodiscard]]
     std::string operator()(const std::string& stringLiteral) {
@@ -238,17 +235,13 @@ auto printBlockStmt(const BlockStmtPtr& blkStmts) -> std::vector<std::string> {
 }
 
 auto printVarStmt(const VarStmtPtr& stmt) -> std::string {
-    std::string str = "var " + stmt->varName.lexeme;
-    if (stmt->initializer.has_value()) {
-    str = "( = ( " + str + " ) " + printer::toString(stmt->initializer.value()) + " )";
-    }
-    return str + ";";
+    return std::format("var {}{}", stmt->varName.lexeme, 
+        stmt->initializer.has_value() ? std::format("( = {});", printer::toString(stmt->initializer.value())) : "");
 }
 
 auto printIfStmt(const IfStmtPtr& stmt) -> std::vector<std::string> {
     std::vector<std::string> ifStmtStrVec;
-    ifStmtStrVec.emplace_back("( if (" + printer::toString(stmt->condition)
-                            + ")");
+    ifStmtStrVec.emplace_back(std::format("( if ({})", printer::toString(stmt->condition)));
     auto thenBranchVec = printer::toString(stmt->thenBranch);
     std::move(thenBranchVec.begin(), thenBranchVec.end(),
             std::back_inserter(ifStmtStrVec));
@@ -264,8 +257,7 @@ auto printIfStmt(const IfStmtPtr& stmt) -> std::vector<std::string> {
 
 auto printWhileStmt(const WhileStmtPtr& stmt) {
     std::vector<std::string> whileStmtStrVec;
-    whileStmtStrVec.emplace_back(
-      "( while (" + printer::toString(stmt->condition) + ")");
+    whileStmtStrVec.emplace_back(std::format("( while ({})", printer::toString(stmt->condition)));
     auto loopBodyVec = printer::toString(stmt->loopBody);
     std::move(loopBodyVec.begin(), loopBodyVec.end(),
             std::back_inserter(whileStmtStrVec));
@@ -286,7 +278,7 @@ auto printRetStmt(const RetStmtPtr& stmt) -> std::string {
     std::string value = stmt->value.has_value()
                           ? printer::toString(stmt->value.value())
                           : " ";
-    return "( return" + value + ");";
+    return std::format("( return {} );", value);
 }
 
 auto printClassStmt(const ClassStmtPtr& stmt) -> std::vector<std::string> {
