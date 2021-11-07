@@ -18,10 +18,6 @@ SpicyObj ClockBuiltIn::run() {
     return static_cast<double>(now.time_since_epoch().count());
 }
 
-std::string ClockBuiltIn::getFuncName() {
-    return m_funcName;
-}
-
 // ======================== str ===========================
 StrBuiltIn::StrBuiltIn() : BuiltinFunc("str") {}
 
@@ -33,10 +29,6 @@ SpicyObj StrBuiltIn::run() {
     auto value = m_args[0];
     m_args.clear();
     return getObjString(value);
-}
-
-std::string StrBuiltIn::getFuncName() {
-    return m_funcName;
 }
 
 // ======================= sqrt ===========================
@@ -54,10 +46,6 @@ SpicyObj SqrtBuiltIn::run() {
     auto valDbl = std::get<double>(val);
     m_args.clear();
     return std::sqrt(valDbl);
-}
-
-std::string SqrtBuiltIn::getFuncName() {
-    return m_funcName;
 }
 
 // ======================== len ===========================
@@ -82,8 +70,47 @@ SpicyObj LenBuiltIn::run() {
     return ret;
 }
 
-std::string LenBuiltIn::getFuncName() {
-    return m_funcName;
+// ======================= front ==========================
+FrontBuiltIn::FrontBuiltIn()
+    : BuiltinFunc("front") {}
+
+size_t FrontBuiltIn::arity() {
+    return 1;
 }
 
+SpicyObj FrontBuiltIn::run() {
+    auto& val = m_args[0];
+    SpicyObj ret;
+    if (std::holds_alternative<SpicyListSharedPtr>(val)) {
+        ret = std::get<SpicyListSharedPtr>(val)->front();
+    } else if (std::holds_alternative<std::string>(val)) {
+        ret = std::string{ std::get<std::string>(val).front() };
+    } else {
+        ret = nullptr;
+    }
+    m_args.clear();
+    return ret;
+}
+
+// ======================= back ===========================
+BackBuiltIn::BackBuiltIn()
+    : BuiltinFunc("front") {}
+
+size_t BackBuiltIn::arity() {
+    return 1;
+}
+
+SpicyObj BackBuiltIn::run() {
+    auto& val = m_args[0];
+    SpicyObj ret;
+    if (std::holds_alternative<SpicyListSharedPtr>(val)) {
+        ret = std::get<SpicyListSharedPtr>(val)->back();
+    } else if (std::holds_alternative<std::string>(val)) {
+        ret = std::string{ std::get<std::string>(val).back() };
+    } else {
+        ret = nullptr;
+    }
+    m_args.clear();
+    return ret;
+}
 } // namespace spicy

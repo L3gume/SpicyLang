@@ -51,13 +51,11 @@ struct ObjectStringVisitor {
     std::string operator()(const SpicyListSharedPtr& ptr) { return ptr->toString(); }
 };
 
-std::string getObjString(const SpicyObj &obj)
-{
+std::string getObjString(const SpicyObj &obj) {
     return std::visit(ObjectStringVisitor{}, obj);
 }
 
-bool isTrue(const SpicyObj &obj)
-{
+bool isTrue(const SpicyObj &obj) {
     if (std::holds_alternative<std::nullptr_t>(obj)) return false;
     if (std::holds_alternative<bool>(obj)) return std::get<bool>(obj);
     if (std::holds_alternative<FuncSharedPtr>(obj))
@@ -206,16 +204,16 @@ SpicyObj SpicyList::set(const Token& lstName, int idx, SpicyObj val) {
     return nullptr;
 }
 
-SpicyObj SpicyList::back(const Token& lstName) {
+SpicyObj SpicyList::back() {
     if (m_list.empty()) {
-        throw RuntimeError(lstName, "List is empty.");
+        return nullptr;
     }
     return m_list.back();
 }
 
-SpicyObj SpicyList::front(const Token& lstName) {
+SpicyObj SpicyList::front() {
     if (m_list.empty()) {
-        throw RuntimeError(lstName, "List is empty.");
+        return nullptr;
     }
     return m_list.front();
 }

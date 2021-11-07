@@ -84,7 +84,9 @@ public:
 
     virtual size_t arity() = 0;
     virtual SpicyObj run() = 0;
-    virtual std::string getFuncName() = 0;
+    std::string getFuncName() {
+        return m_funcName;
+    }
 };
 
 class SpicyClass : public util::Uncopyable {
@@ -124,8 +126,8 @@ public:
     void appendFront(const Token& lstName, SpicyObj val);
     SpicyObj get(const Token& lstName, int idx);
     SpicyObj set(const Token& lstName, int idx, SpicyObj val);
-    SpicyObj back(const Token& lstName);
-    SpicyObj front(const Token& lstName);
+    SpicyObj back();
+    SpicyObj front();
     SpicyObj size();
     
     std::string toString();

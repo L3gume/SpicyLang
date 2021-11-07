@@ -12,7 +12,6 @@ public:
 
     size_t arity() override;
     SpicyObj run() override;
-    std::string getFuncName() override;
 };
 
 class StrBuiltIn : public BuiltinFunc {
@@ -21,7 +20,6 @@ public:
 
     size_t arity() override;
     SpicyObj run() override;
-    std::string getFuncName() override;
 };
 
 class SqrtBuiltIn : public BuiltinFunc {
@@ -30,7 +28,6 @@ public:
 
     size_t arity() override;
     SpicyObj run() override;
-    std::string getFuncName() override;
 };
 
 class LenBuiltIn : public BuiltinFunc {
@@ -39,7 +36,22 @@ public:
     
     size_t arity() override;
     SpicyObj run() override;
-    std::string getFuncName() override;
+};
+
+class FrontBuiltIn : public BuiltinFunc {
+public:
+    FrontBuiltIn();
+    
+    size_t arity() override;
+    SpicyObj run() override;
+};
+
+class BackBuiltIn : public BuiltinFunc {
+public:
+    BackBuiltIn();
+    
+    size_t arity() override;
+    SpicyObj run() override;
 };
 
 } // namespace spicy

@@ -21,12 +21,18 @@ fun fib(n) {
     return a + b;    
 }
 
-fun map(ls, fn) {
+fun mapCpy(ls, fn) {
     var ret = [];
     for (var i = 0; i < len(ls); i = i + 1) {
         ret <- fn(ls[i]);
     }
     return ret;
+}
+
+fun map(ls, fn) {
+    for (var i = 0; i < len(ls); i = i + 1) {
+        ls[i] = fn(ls[i]);
+    }
 }
 
 fun filter(ls, fn) {
@@ -39,5 +45,11 @@ fun filter(ls, fn) {
     return ret;
 }
 
-print map(buildList(10), fib);
-print filter(buildList(20), fun (x) { return x > 10; });
+var lst = [] <- 1 <- 2 <- 3 <- 4 <- 5;
+var twice = fun(x){return x*2;};
+print lst;
+map(lst, twice);
+print lst;
+
+//print mapCpy(buildList(10), fib);
+//print filter(buildList(20), fun (x) { return x > 10; });

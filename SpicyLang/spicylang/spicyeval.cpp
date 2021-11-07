@@ -373,6 +373,8 @@ void SpicyEvaluator::initBuiltins() {
     m_envMgr.defineGlobal("str", std::make_shared<StrBuiltIn>());
     m_envMgr.defineGlobal("sqrt", std::make_shared<SqrtBuiltIn>());
     m_envMgr.defineGlobal("len", std::make_shared<LenBuiltIn>());
+    m_envMgr.defineGlobal("front", std::make_shared<FrontBuiltIn>());
+    m_envMgr.defineGlobal("back", std::make_shared<BackBuiltIn>());
 }
 
 OptSpicyObj SpicyEvaluator::execExpressionStmt(const ast::ExprStmtPtr &stmt) {
@@ -441,7 +443,7 @@ OptSpicyObj SpicyEvaluator::execRetStmt(const ast::RetStmtPtr &stmt) {
 }
 
 OptSpicyObj SpicyEvaluator::execClassStmt(const ast::ClassStmtPtr &stmt) {
-    m_envMgr.define(stmt->className, "<class " + stmt->className.lexeme + ">");
+    m_envMgr.define(stmt->className, std::format("<class {}>", stmt->className.lexeme));
     std::vector<std::pair<std::string, SpicyObj>> methods;
 
     const auto hasSuperClass = stmt->superClass.has_value();

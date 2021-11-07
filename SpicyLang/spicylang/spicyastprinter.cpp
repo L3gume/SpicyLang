@@ -34,20 +34,23 @@ struct LiteralPrintVisitor {
 };
 
 auto getLiteralString(spicy::OptTokenLiteral literal) -> std::string {
-    // Literal = std::variant<std::string, double>;
     if (!literal.has_value()) return "nil";
     return std::visit(LiteralPrintVisitor{}, literal.value());
 }
 
+auto parenthesize(const std::string& val)
+    -> std::string {
+    return std::format("({})", val);
+}
+
 auto parenthesize(const std::string& name, const ExprPtrVariant& expr)
     -> std::string {
-    return "(" + name + " " + printer::toString(expr) + ")";
+    return std::format("({} {})", name, printer::toString(expr));
 }
 
 auto parenthesize(const std::string& name, const ExprPtrVariant& expr1,
                   const ExprPtrVariant& expr2) -> std::string {
-    return "(" + name + " " + printer::toString(expr1) + " "
-         + printer::toString(expr2) + ")";
+    return std::format("({} {} {})", name, printer::toString(expr1), printer::toString(expr2));
 }
 
 auto printBinaryExpr(const BinaryExprPtr& expr) -> std::string {
@@ -79,7 +82,7 @@ auto printPostfixExpr(const PostfixExprPtr& expr) -> std::string {
 }
 
 auto printVariableExpr(const VariableExprPtr& expr) -> std::string {
-    return "(" + expr->varName.lexeme + ")";
+    return parenthesize(expr->varName.lexeme);
 }
 
 auto printAssignExpr(const AssignExprPtr& expr) -> std::string {
