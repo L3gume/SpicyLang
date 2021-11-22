@@ -137,6 +137,10 @@ void SpicyResolver::resolveUnaryExpr(const ast::UnaryExprPtr &expr) {
     resolve(expr->right);
 }
 
+void SpicyResolver::resolvePostfixExpr(const ast::PostfixExprPtr& expr) {
+    resolve(expr->left);
+}
+
 void SpicyResolver::resolveFuncExpr(const ast::FuncExprPtr &expr) {
     resolveLambda(expr);
 }
@@ -206,7 +210,7 @@ struct ExprResolverVisitor {
     void operator()(const ast::LiteralExprPtr& expr) { resolver->resolveLiteralExpr(expr); }
     void operator()(const ast::UnaryExprPtr& expr) { resolver->resolveUnaryExpr(expr); }
     void operator()(const ast::ConditionalExprPtr& expr) {}
-    void operator()(const ast::PostfixExprPtr& expr) {}
+    void operator()(const ast::PostfixExprPtr& expr) { resolver->resolvePostfixExpr(expr); }
     void operator()(const ast::VariableExprPtr& expr) { resolver->resolveVarExpr(expr); }
     void operator()(const ast::AssignExprPtr& expr) { resolver->resolveAssignExpr(expr); }
     void operator()(const ast::LogicalExprPtr& expr) { resolver->resolveLogicalExpr(expr); }

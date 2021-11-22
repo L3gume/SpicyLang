@@ -122,12 +122,20 @@ ast::ExprPtrVariant SpicyParser::factor() {
 }
 
 ast::ExprPtrVariant SpicyParser::unary() {
-    if (match({TokenType::BANG, TokenType::MINUS})) {
+    if (match({TokenType::BANG, TokenType::MINUS, TokenType::PLUS_PLUS, TokenType::MINUS_MINUS})) {
         const auto& op = previous();
         auto rhs = unary();
         return ast::createUnaryEPV(op, std::move(rhs));
     }
-    return call();
+    return postfix();
+}
+
+ast::ExprPtrVariant SpicyParser::postfix() {
+    auto expr = call();
+    while (match({ TokenType::PLUS_PLUS, TokenType::MINUS_MINUS })) {
+        expr = ast::createPostfixEPV(std::move(expr), previous());
+    }
+    return expr;
 }
 
 ast::ExprPtrVariant SpicyParser::call() {

@@ -53,9 +53,17 @@ void SpicyScanner::scanToken() {
         case ',': addToken(TokenType::COMMA); break;
         case '.': addToken(TokenType::DOT); break;
         case '-': 
-            addToken(match('>') ? TokenType::APPEND_FRONT : TokenType::MINUS); 
+            if (match('>')) {
+                addToken(TokenType::APPEND_FRONT); 
+            } else if (match('-')) {
+                addToken(TokenType::MINUS_MINUS);
+            } else {
+                addToken(TokenType::MINUS);
+            }
             break;
-        case '+': addToken(TokenType::PLUS); break;
+        case '+': 
+            addToken(match('+') ? TokenType::PLUS_PLUS : TokenType::PLUS);
+            break;
         case ';': addToken(TokenType::SEMICOLON); break;
         case '*': addToken(TokenType::STAR); break;
         case ':': addToken(TokenType::COLON); break;

@@ -30,6 +30,7 @@ private:
     SpicyObj evalLiteralExpr(const ast::LiteralExprPtr& expr);
     SpicyObj evalGroupingExpr(const ast::GroupingExprPtr& expr);
     SpicyObj evalUnaryExpr(const ast::UnaryExprPtr& expr);
+    SpicyObj evalPostfixExpr(const ast::PostfixExprPtr& expr);
     SpicyObj evalBinaryExpr(const ast::BinaryExprPtr& expr);
     SpicyObj evalVariableExpr(const ast::VariableExprPtr& expr);
     SpicyObj evalAssignExpr(const ast::AssignExprPtr& expr);

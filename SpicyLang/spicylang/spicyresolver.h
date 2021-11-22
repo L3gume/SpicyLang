@@ -54,6 +54,7 @@ private:
     void resolveLiteralExpr(const ast::LiteralExprPtr& expr);
     void resolveLogicalExpr(const ast::LogicalExprPtr& expr);
     void resolveUnaryExpr(const ast::UnaryExprPtr& expr);
+    void resolvePostfixExpr(const ast::PostfixExprPtr& expr);
     void resolveFuncExpr(const ast::FuncExprPtr& expr);
     void resolveGetExpr(const ast::GetExprPtr& expr);
     void resolveSetExpr(const ast::SetExprPtr& expr);

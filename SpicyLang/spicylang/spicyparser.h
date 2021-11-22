@@ -49,6 +49,7 @@ private:
     ast::ExprPtrVariant term();
     ast::ExprPtrVariant factor();
     ast::ExprPtrVariant unary();
+    ast::ExprPtrVariant postfix();
     ast::ExprPtrVariant call();
     ast::ExprPtrVariant primary();
     ast::ExprPtrVariant lambdaFunction();

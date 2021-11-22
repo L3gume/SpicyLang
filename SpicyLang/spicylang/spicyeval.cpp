@@ -74,7 +74,7 @@ struct SpicyExprEvaluator {
     [[nodiscard]] SpicyObj operator()(const ast::LiteralExprPtr& expr) { return eval->evalLiteralExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::UnaryExprPtr& expr) { return eval->evalUnaryExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::ConditionalExprPtr& expr) { return SpicyObj{nullptr}; }
-    [[nodiscard]] SpicyObj operator()(const ast::PostfixExprPtr& expr) { return SpicyObj{nullptr}; }
+    [[nodiscard]] SpicyObj operator()(const ast::PostfixExprPtr& expr) { return eval->evalPostfixExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::VariableExprPtr& expr) { return eval->evalVariableExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::AssignExprPtr& expr) { return eval->evalAssignExpr(expr); }
     [[nodiscard]] SpicyObj operator()(const ast::LogicalExprPtr& expr) { return eval->evalLogicalExpr(expr); }
@@ -107,17 +107,37 @@ SpicyObj SpicyEvaluator::evalGroupingExpr(const ast::GroupingExprPtr& expr) {
 }
 
 SpicyObj SpicyEvaluator::evalUnaryExpr(const ast::UnaryExprPtr& expr) {
-    const auto& rval = evalExpr(expr->right);
+    auto rval = evalExpr(expr->right);
     switch (expr->op.type) {
     case TokenType::MINUS:
         typecheck::checkUnaryNumOperand(expr->op, rval);
         return -std::get<double>(rval);
     case TokenType::BANG:
         return !isTrue(rval);
+    case TokenType::PLUS_PLUS:
+        typecheck::checkUnaryNumOperand(expr->op, rval);
+        return ++std::get<double>(rval);
+    case TokenType::MINUS_MINUS:
+        typecheck::checkUnaryNumOperand(expr->op, rval);
+        return --std::get<double>(rval);
     default:
         throw RuntimeError(expr->op, "Invalid unary operator.");
     }
     return SpicyObj{nullptr};
+}
+
+SpicyObj SpicyEvaluator::evalPostfixExpr(const ast::PostfixExprPtr& expr) {
+    auto lval = evalExpr(expr->left);
+    typecheck::checkUnaryNumOperand(expr->op, lval);
+    switch (expr->op.type) {
+    case TokenType::PLUS_PLUS:
+        return std::get<double>(lval)++;
+    case TokenType::MINUS_MINUS:
+        return std::get<double>(lval)--;
+    default:
+        throw RuntimeError(expr->op, "Invalid postfix operator.");
+    }
+    return SpicyObj();
 }
 
 SpicyObj SpicyEvaluator::evalBinaryExpr(const ast::BinaryExprPtr &expr) {

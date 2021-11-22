@@ -20,6 +20,7 @@ enum class TokenType {
     GREATER, GREATER_EQUAL,
     LESS, LESS_EQUAL,
     APPEND, APPEND_FRONT,
+    PLUS_PLUS, MINUS_MINUS,
     // literals
     IDENTIFIER, STRING, NUMBER, LIST,
     // keywords
