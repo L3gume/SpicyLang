@@ -12,7 +12,11 @@ int main(const int argc, const char* argv[]) {
     } else {
         auto scriptPath = std::string{ argv[1] };
         spicy::SpicyInterpreter interpreter(scriptPath);
-        interpreter.run();
+        if (argc >= 3 && argv[2] == "--bytecode") {
+            interpreter.runByteCode();
+        } else {
+            interpreter.runTreeWalk();
+        }
     }
     return 0;
 }

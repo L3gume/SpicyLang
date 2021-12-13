@@ -23,18 +23,19 @@ class SpicyInterpreter {
 public:
     SpicyInterpreter(const std::string& scriptPath);
     
-    void run();
+    void runTreeWalk();
+    void runByteCode();
     void repl();
 
     bool hadError();
     bool hadRuntimeError();
     
 private:
-    //void interpret(const ast::ExprPtrVariant& ast);
-    //void interpret(const ast::StmtPtrVariant& ast);
     void interpret();
-    void interpretAndPrint(const std::vector<ast::StmtPtrVariant>& ast);
+    void interpretByteCode();
     void loadScript();
+    
+    void getNextLine(std::string& line);
 };
     
 }

@@ -148,6 +148,7 @@
     <ClCompile Include="spicylang\spicyast.cpp" />
     <ClCompile Include="spicylang\spicyastprinter.cpp" />
     <ClCompile Include="spicylang\spicybuiltins.cpp" />
+    <ClCompile Include="spicylang\spicydisassembler.cpp" />
     <ClCompile Include="spicylang\spicyenvironment.cpp" />
     <ClCompile Include="spicylang\spicyeval.cpp" />
     <ClCompile Include="spicylang\spicyinterpreter.cpp" />
@@ -155,15 +156,16 @@
     <ClCompile Include="spicylang\spicyparser.cpp" />
     <ClCompile Include="spicylang\spicyresolver.cpp" />
     <ClCompile Include="spicylang\spicyscanner.cpp" />
+    <ClCompile Include="spicylang\spicyvm.cpp" />
     <ClCompile Include="spicylang\types.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="spicylang\ast.h" />
     <ClInclude Include="spicylang\parsers.h" />
     <ClInclude Include="spicylang\spicy.h" />
     <ClInclude Include="spicylang\spicyast.h" />
     <ClInclude Include="spicylang\spicyastprinter.h" />
     <ClInclude Include="spicylang\spicybuiltins.h" />
+    <ClInclude Include="spicylang\spicydisassembler.h" />
     <ClInclude Include="spicylang\spicyenvironment.h" />
     <ClInclude Include="spicylang\spicyerrors.h" />
     <ClInclude Include="spicylang\spicyeval.h" />
@@ -173,8 +175,9 @@
     <ClInclude Include="spicylang\spicyresolver.h" />
     <ClInclude Include="spicylang\spicyscanner.h" />
     <ClInclude Include="spicylang\spicyutil.h" />
-    <ClInclude Include="spicylang\symbols.h" />
+    <ClInclude Include="spicylang\spicyvm.h" />
     <ClInclude Include="spicylang\types.h" />
+    <ClInclude Include="spicylang\vmtypes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

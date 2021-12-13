@@ -54,11 +54,14 @@
     <ClCompile Include="spicylang\types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="spicylang\spicydisassembler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spicylang\spicyvm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="spicylang\ast.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="spicylang\parsers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -101,10 +104,16 @@
     <ClInclude Include="spicylang\spicyutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="spicylang\symbols.h">
+    <ClInclude Include="spicylang\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="spicylang\types.h">
+    <ClInclude Include="spicylang\spicydisassembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spicylang\spicyvm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spicylang\vmtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

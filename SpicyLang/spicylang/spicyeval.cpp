@@ -62,7 +62,7 @@ SpicyObj evalPlusBinOp(const SpicyObj& lval, const SpicyObj& rval) {
 }
 } // namespace internal
 
-SpicyEvaluator::SpicyEvaluator() {
+SpicyEvaluator::SpicyEvaluator(bool isRepl) : m_isRepl(isRepl) {
     initBuiltins();
 }
 
@@ -89,7 +89,8 @@ struct SpicyExprEvaluator {
 };
 
 SpicyObj SpicyEvaluator::evalExpr(const ast::ExprPtrVariant& expr) {
-    return std::visit(SpicyExprEvaluator(this), expr);
+    m_lastObj = std::move(std::visit(SpicyExprEvaluator(this), expr));
+    return m_lastObj;
 }
 
 SpicyObj SpicyEvaluator::evalLiteralExpr(const ast::LiteralExprPtr& expr) {
@@ -115,11 +116,21 @@ SpicyObj SpicyEvaluator::evalUnaryExpr(const ast::UnaryExprPtr& expr) {
     case TokenType::BANG:
         return !isTrue(rval);
     case TokenType::PLUS_PLUS:
-        typecheck::checkUnaryNumOperand(expr->op, rval);
-        return ++std::get<double>(rval);
     case TokenType::MINUS_MINUS:
+    {
+        if (!std::holds_alternative<ast::VariableExprPtr>(expr->right))
+            throw RuntimeError(expr->op, "Operand must be a variable.");
         typecheck::checkUnaryNumOperand(expr->op, rval);
-        return --std::get<double>(rval);
+        const auto& varExpr = std::get<ast::VariableExprPtr>(expr->right);
+        const auto value = expr->op.type == TokenType::PLUS_PLUS ? ++std::get<double>(rval) : --std::get<double>(rval);
+        if (const auto& distance = m_locals.find(reinterpret_cast<uint64_t>(varExpr.get()));
+            distance != m_locals.end()) {
+            m_envMgr.assignAt(distance->second, varExpr->varName, value);
+        } else {
+            m_envMgr.assignGlobal(varExpr->varName, value);
+        }
+        return value;
+    }
     default:
         throw RuntimeError(expr->op, "Invalid unary operator.");
     }
@@ -127,17 +138,22 @@ SpicyObj SpicyEvaluator::evalUnaryExpr(const ast::UnaryExprPtr& expr) {
 }
 
 SpicyObj SpicyEvaluator::evalPostfixExpr(const ast::PostfixExprPtr& expr) {
-    auto lval = evalExpr(expr->left);
-    typecheck::checkUnaryNumOperand(expr->op, lval);
-    switch (expr->op.type) {
-    case TokenType::PLUS_PLUS:
-        return std::get<double>(lval)++;
-    case TokenType::MINUS_MINUS:
-        return std::get<double>(lval)--;
-    default:
+    if (!std::holds_alternative<ast::VariableExprPtr>(expr->left))
+        throw RuntimeError(expr->op, "Operand must be a variable.");
+    if (!(expr->op.type == TokenType::PLUS_PLUS || expr->op.type == TokenType::MINUS_MINUS))
         throw RuntimeError(expr->op, "Invalid postfix operator.");
+    const auto& lval = evalExpr(expr->left);
+    typecheck::checkUnaryNumOperand(expr->op, lval);
+    const auto& varExpr = std::get<ast::VariableExprPtr>(expr->left);
+    const auto& ret = std::get<double>(lval);
+    const auto value = expr->op.type == TokenType::PLUS_PLUS ? ret + 1 : ret - 1;
+    if (const auto& distance = m_locals.find(reinterpret_cast<uint64_t>(varExpr.get()));
+        distance != m_locals.end()) {
+        m_envMgr.assignAt(distance->second, varExpr->varName, value);
+    } else {
+        m_envMgr.assignGlobal(varExpr->varName, value);
     }
-    return SpicyObj();
+    return ret;
 }
 
 SpicyObj SpicyEvaluator::evalBinaryExpr(const ast::BinaryExprPtr &expr) {
@@ -288,15 +304,11 @@ SpicyObj SpicyEvaluator::evalGetExpr(const ast::GetExprPtr &expr) {
     if (!std::holds_alternative<SpicyInstanceSharedPtr>(obj)) {
         throw RuntimeError(expr->name, "Only class instances have properties.");
     }
-    try {
-        auto prop = std::get<SpicyInstanceSharedPtr>(obj)->get(expr->name);
-        if (std::holds_alternative<FuncSharedPtr>(prop)) {
-            prop = SpicyObj{bindInstance(std::get<FuncSharedPtr>(prop), std::get<SpicyInstanceSharedPtr>(obj))};
-        }
-        return prop;
-    }  catch (RuntimeError& err) {
-        throw err;
+    auto prop = std::get<SpicyInstanceSharedPtr>(obj)->get(expr->name);
+    if (std::holds_alternative<FuncSharedPtr>(prop)) {
+        prop = SpicyObj{bindInstance(std::get<FuncSharedPtr>(prop), std::get<SpicyInstanceSharedPtr>(obj))};
     }
+    return prop;
 }
 
 SpicyObj SpicyEvaluator::evalSetExpr(const ast::SetExprPtr &expr) {
@@ -315,8 +327,8 @@ SpicyObj SpicyEvaluator::evalThisExpr(const ast::ThisExprPtr &expr) {
 
 SpicyObj SpicyEvaluator::evalSuperExpr(const ast::SuperExprPtr &expr) {
     const auto distance = m_locals[reinterpret_cast<uint64_t>(expr.get())];
-    auto superClass = std::get<SpicyClassSharedPtr>(m_envMgr.get(distance, "super"));
-    auto instance = std::get<SpicyInstanceSharedPtr>(m_envMgr.get(distance - 1, "this"));
+    const auto superClass = std::get<SpicyClassSharedPtr>(m_envMgr.get(distance, "super"));
+    const auto instance = std::get<SpicyInstanceSharedPtr>(m_envMgr.get(distance - 1, "this"));
     auto method = superClass->findMethod(expr->method.lexeme);
     if (!method.has_value())
         throw RuntimeError(expr->method, std::format("Attempted to access undefined property {} on super.", expr->method.lexeme));
@@ -386,6 +398,10 @@ OptSpicyObj SpicyEvaluator::execStmts(const std::vector<ast::StmtPtrVariant> &st
 
 void SpicyEvaluator::resolve(uint64_t exprAddr, uint32_t depth) {
     m_locals.insert_or_assign(exprAddr, depth);
+}
+
+SpicyObj SpicyEvaluator::getLastObj() {
+    return m_lastObj;
 }
 
 void SpicyEvaluator::initBuiltins() {

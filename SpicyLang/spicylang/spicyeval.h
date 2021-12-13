@@ -14,15 +14,18 @@ struct SpicyStmtExecutor;
 class SpicyEvaluator {
     EnvironmentMgr m_envMgr{};
     std::map<uint64_t, uint32_t> m_locals{};
+    const bool m_isRepl;
+    SpicyObj m_lastObj{};
 
 public:
-    SpicyEvaluator();
+    explicit SpicyEvaluator(bool isRepl = false);
 
     SpicyObj evalExpr(const ast::ExprPtrVariant& expr);
     OptSpicyObj execStmt(const ast::StmtPtrVariant& stmt);
     OptSpicyObj execStmts(const std::vector<ast::StmtPtrVariant>& stmts);
 
     void resolve(uint64_t exprAddr, uint32_t depth);
+    SpicyObj getLastObj();
 
 private:
     void initBuiltins();
