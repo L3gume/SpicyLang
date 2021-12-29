@@ -1,0 +1,31 @@
+
+fun forEach(ls, fn) {
+    for (var i = 0; i < len(ls); i++) {
+        fn(ls[i]);
+    }
+}
+
+fun mapCpy(ls, fn) {
+    var ret = [];
+    for (var i = 0; i < len(ls); i = i + 1) {
+        ret <- fn(ls[i]);
+    }
+    return ret;
+}
+
+fun map(ls, fn) {
+    for (var i = 0; i < len(ls); i = i + 1) {
+        ls[i] = fn(ls[i]);
+    }
+}
+
+fun filter(ls, fn) {
+    var ret = [];
+    for (var i = 0; i < len(ls); i = i + 1) {
+        if (fn(ls[i])) {
+            ret <- ls[i];
+        }
+    }
+    return ret;
+}
+
