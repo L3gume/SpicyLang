@@ -5,32 +5,30 @@
 #include "spicylang/spicycli.h"
 
 int main(const int argc, const char* argv[]) {
-    //if (argc == 1) {
-    //    spicy::SpicyInterpreter interpreter("");
-    //    std::cout << "== SpicyLang ==" << '\n';
-    //    std::cout << "version 0.1\n\n";
-    //    interpreter.repl();
-    //} else {
-    //    auto scriptPath = std::string{ argv[1] };
-    //    spicy::SpicyInterpreter interpreter(scriptPath);
-    //    if (argc >= 3 && argv[2] == "--bytecode") {
-    //        interpreter.runByteCode();
-    //    } else {
-    //        interpreter.runTreeWalk();
-    //    }
-    //}
+    const auto spicyLangHeader = []() {
+        std::cout << "== SpicyLang ==" << '\n';
+        std::cout << "version 0.1\n\n";
+    };
+    const auto usageMessage = [&spicyLangHeader]() {
+        spicyLangHeader();
+        std::cout << "USAGE: SpicyLang.exe options [path]" << '\n';
+        std::cout << '\n' << "options:" << '\n';
+        std::cout << "--repl\t\trepl loop" << '\n';
+        std::cout << "--bytecode\tdump bytecode" << '\n';
+        std::cout << "--treewalk\texecute using treewalk interpreter" << '\n';
+        std::cout << "--help\t\tdisplay this message" << '\n';
+    };
     const auto config = spicy::parseArguments(argc, argv);
     if (config.is_repl) {
         spicy::SpicyInterpreter interpreter("");
-        std::cout << "== SpicyLang ==" << '\n';
-        std::cout << "version 0.1\n\n";
+        spicyLangHeader();
         interpreter.repl();
     } else if (!config.help) {
         spicy::SpicyInterpreter interpreter(config.script_path);
         if (config.treewalk) interpreter.runTreeWalk();
         else interpreter.runByteCode();
     } else {
-        std::cout << "USAGE: TODO" << '\n';
+        usageMessage();
     }
     return 0;
 }
