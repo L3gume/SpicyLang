@@ -2,8 +2,24 @@
 
 namespace spicy {
 // Token
+Token::Token() : type(TokenType::ERROR), lexeme(""), literal(std::nullopt), line(-1) {}
+
 Token::Token(TokenType type, const std::string& lexeme, OptTokenLiteral literal, int line) :
         type(type), lexeme(lexeme), literal(literal), line(line) {}
+
+void Token::operator=(const Token& rhs) noexcept {
+    type = rhs.type;
+    lexeme = rhs.lexeme;
+    literal = rhs.literal;
+    line = rhs.line;
+}
+
+void Token::operator=(Token&& rhs) noexcept {
+    type = std::move(rhs.type);
+    lexeme = std::move(rhs.lexeme);
+    literal = std::move(rhs.literal);
+    line = std::move(rhs.line);
+}
 
 const std::string Token::toString() const noexcept {
     switch (type) {

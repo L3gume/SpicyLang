@@ -26,6 +26,8 @@ public:
     SpicyScanner(const std::string& source);
     std::vector<Token> scanTokens();
     
+    Token scanSingle();
+    
 private:
     bool isAtEnd();
     void scanToken();

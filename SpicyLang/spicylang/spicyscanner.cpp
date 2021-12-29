@@ -25,14 +25,22 @@ SpicyScanner::SpicyScanner(const std::string& source) : m_source(source) {
 }
 
 std::vector<Token> SpicyScanner::scanTokens() {
-    m_start = m_current = 0;
-    m_line = 1;
     while (!isAtEnd()) {
         m_start = m_current;
         scanToken();
     }
     m_tokens.emplace_back(Token(TokenType::END_OF_FILE, "", std::nullopt, m_line));
     return m_tokens;
+}
+
+Token SpicyScanner::scanSingle() {
+    const auto count = m_tokens.size();
+    while (m_tokens.size() == count) {
+        if (isAtEnd()) return { TokenType::END_OF_FILE, "", std::nullopt, m_line };
+        m_start = m_current;
+        scanToken();
+    }
+    return m_tokens.back();
 }
 
 bool SpicyScanner::isAtEnd() {

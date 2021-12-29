@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -148,7 +148,7 @@
     <ClCompile Include="spicylang\spicyast.cpp" />
     <ClCompile Include="spicylang\spicyastprinter.cpp" />
     <ClCompile Include="spicylang\spicybuiltins.cpp" />
-    <ClCompile Include="spicylang\spicydisassembler.cpp" />
+    <ClCompile Include="spicylang\spicycompiler.cpp" />
     <ClCompile Include="spicylang\spicyenvironment.cpp" />
     <ClCompile Include="spicylang\spicyeval.cpp" />
     <ClCompile Include="spicylang\spicyinterpreter.cpp" />
@@ -158,6 +158,7 @@
     <ClCompile Include="spicylang\spicyscanner.cpp" />
     <ClCompile Include="spicylang\spicyvm.cpp" />
     <ClCompile Include="spicylang\types.cpp" />
+    <ClCompile Include="spicylang\vmtypes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="spicylang\parsers.h" />
@@ -165,7 +166,8 @@
     <ClInclude Include="spicylang\spicyast.h" />
     <ClInclude Include="spicylang\spicyastprinter.h" />
     <ClInclude Include="spicylang\spicybuiltins.h" />
-    <ClInclude Include="spicylang\spicydisassembler.h" />
+    <ClInclude Include="spicylang\spicycli.h" />
+    <ClInclude Include="spicylang\spicycompiler.h" />
     <ClInclude Include="spicylang\spicyenvironment.h" />
     <ClInclude Include="spicylang\spicyerrors.h" />
     <ClInclude Include="spicylang\spicyeval.h" />

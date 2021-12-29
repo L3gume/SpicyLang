@@ -26,18 +26,27 @@ enum class TokenType {
     // keywords
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
-    END_OF_FILE
+    END_OF_FILE,
+    ERROR
 };
 
 using TokenLiteral = std::variant<double, std::string>;
 using OptTokenLiteral = std::optional<TokenLiteral>;
 struct Token {
-    const TokenType type;
-    const std::string lexeme;
-    const OptTokenLiteral literal;
-    const int line;
+    TokenType type;
+    std::string lexeme;
+    OptTokenLiteral literal;
+    int line;
 
+    Token();
     Token(TokenType type, const std::string& lexeme, OptTokenLiteral literal, int line);
+    
+    Token(const Token&) = default;
+    Token(Token&&) = default;
+    
+    void operator=(const Token& rhs) noexcept;
+    void operator=(Token&& rhs) noexcept;
+    
     const std::string toString() const noexcept;
 };
 

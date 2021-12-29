@@ -9,7 +9,7 @@
 #include <string>
 #include <optional>
 
-namespace habanero::spicy::parsers {
+namespace spicy::parsers {
     
     // --------------------------------------------------------------------------------
     // Utility Parsers
@@ -63,8 +63,8 @@ namespace habanero::spicy::parsers {
     auto match_string(std::string str) {
         return [=](std::string in) -> parse_result_t<std::string> {
             auto s = in;
-            for (auto i = 0: i < str.size(); ++i) {
-                auto parsed = match_char(std[i])(s);
+            for (auto i = 0; i < str.size(); ++i) {
+                auto parsed = match_char(str[i])(s);
                 if (!parsed) return std::nullopt;
                 s = parsed->second;
             }
