@@ -60,8 +60,26 @@ size_t spicy::Chunk::disassembleInstruction(size_t offset) const noexcept {
     switch (instr) {
     case OpCode::OP_CONSTANT:
         return disassembleConstantInstruction("OP_CONSTANT", offset);
+    case OpCode::OP_DEFINE_GLOBAL:
+        return disassembleConstantInstruction("OP_DEFINE_GLOBAL", offset);
+    case OpCode::OP_GET_GLOBAL:
+        return disassembleConstantInstruction("OP_GET_GLOBAL", offset);
+    case OpCode::OP_NIL:
+        return disassembleSimpleInstruction("OP_NIL", offset);
+    case OpCode::OP_TRUE:
+        return disassembleSimpleInstruction("OP_TRUE", offset);
+    case OpCode::OP_FALSE:
+        return disassembleSimpleInstruction("OP_FALSE", offset);
+    case OpCode::OP_PRINT:
+        return disassembleSimpleInstruction("OP_PRINT", offset);
     case OpCode::OP_RETURN:
         return disassembleSimpleInstruction("OP_RETURN", offset);
+    case OpCode::OP_EQUAL:
+        return disassembleSimpleInstruction("OP_EQUAL", offset);
+    case OpCode::OP_GREATER:
+        return disassembleSimpleInstruction("OP_GREATER", offset);
+    case OpCode::OP_LESS:
+        return disassembleSimpleInstruction("OP_LESS", offset);
     case OpCode::OP_ADD:    
         return disassembleSimpleInstruction("OP_ADD", offset);
     case OpCode::OP_SUBTRACT:    
@@ -72,6 +90,10 @@ size_t spicy::Chunk::disassembleInstruction(size_t offset) const noexcept {
         return disassembleSimpleInstruction("OP_DIVIDE", offset);
     case OpCode::OP_NEGATE:    
         return disassembleSimpleInstruction("OP_NEGATE", offset);
+    case OpCode::OP_NOT:    
+        return disassembleSimpleInstruction("OP_NOT", offset);
+    case OpCode::OP_POP:
+        return disassembleSimpleInstruction("OP_POP", offset);
     default:
         std::cout << std::format("Unknown opcode: {}\n", static_cast<uint8_t>(instr));
         return offset + simple_instruction_size;

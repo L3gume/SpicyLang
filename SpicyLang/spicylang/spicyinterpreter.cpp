@@ -11,6 +11,7 @@
 #include "spicyastprinter.h"
 #include "spicyobjects.h"
 #include "spicycompiler.h"
+#include "spicyvm.h"
 
 namespace spicy {
 
@@ -43,27 +44,35 @@ void SpicyInterpreter::runByteCode() {
 
 void SpicyInterpreter::repl() {
     auto line = std::string{};
-    //eval::SpicyEvaluator evaluator(true);
-    //eval::SpicyResolver resolver(evaluator);
+    SpicyVM vm(true);
     getNextLine(line);
     while (line != "exit();") {
         SpicyScanner scanner(line);
-        //SpicyParser parser(scanner.scanTokens());
-        //auto&& parsed = parser.parseProgram();
-        //m_program.insert(m_program.end(), std::make_move_iterator(parsed.begin()), std::make_move_iterator(parsed.end()));
-        //try {
-        //    resolver.resolve(m_program.back());
-        //    evaluator.execStmt(m_program.back());
-        //    std::cout << std::format("{}\n", getObjString(evaluator.getLastObj()));
-        //} catch (RuntimeError err) {
-        //    runtimeError(err);
-        //}
         SpicyCompiler compiler(scanner);
-        auto&& chunk = compiler.compile();
-        chunk.disassemble("testChunk");
+        vm.execute(compiler.compile());
         getNextLine(line);
     }
-}   
+}
+
+void SpicyInterpreter::replLegacy() {
+    auto line = std::string{};
+    eval::SpicyEvaluator evaluator(true);
+    eval::SpicyResolver resolver(evaluator);
+    while (line != "exit();") {
+        SpicyScanner scanner(line);
+        SpicyParser parser(scanner.scanTokens());
+        auto&& parsed = parser.parseProgram();
+        m_program.insert(m_program.end(), std::make_move_iterator(parsed.begin()), std::make_move_iterator(parsed.end()));
+        try {
+            resolver.resolve(m_program.back());
+            evaluator.execStmt(m_program.back());
+            std::cout << std::format("{}\n", getObjString(evaluator.getLastObj()));
+        } catch (RuntimeError err) {
+            runtimeError(err);
+        }
+        getNextLine(line);
+    }
+}
 
 bool SpicyInterpreter::hadError() {
     return m_hadError;

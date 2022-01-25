@@ -26,6 +26,7 @@ public:
     void runTreeWalk();
     void runByteCode();
     void repl();
+    void replLegacy();
 
     bool hadError();
     bool hadRuntimeError();

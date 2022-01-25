@@ -47,10 +47,14 @@ public:
 private:
     void advance();
     void consume(TokenType type, const std::string& errMsg);
+    bool match(TokenType type);
+    bool check(TokenType type);
 
     void emitByte(uint8_t byte);
     void emitByte(Chunk::OpCode byte);
     void emitBytes(uint8_t byte1, uint8_t byte2);
+    void emitBytes(Chunk::OpCode byte1, uint8_t byte2);
+    void emitBytes(Chunk::OpCode byte1, Chunk::OpCode byte2);
     void emitReturn();
     void emitConstant(SpicyObj constant);
 
@@ -59,13 +63,29 @@ private:
     void error(const std::string& msg);
     void errorAtCurrent(const std::string& msg);
     void errorAt(const Token& token, const std::string& msg);
+    void synchronize();
     
     void parsePrecedence(Precedence prec);
+    
+    void declaration();
+    void varDeclaration();
+    void statement();
+    void printStatement();
+    void expressionStatement();
+    
     void expression();
+    void variable();
+    void namedVariable(const spicy::Token& name);
     void number();
+    void literal();
     void grouping();
     void unary();
     void binary();
+    void string();
+    
+    [[nodiscard]] uint8_t parseVar(const std::string& errMsg);
+    [[nodiscard]] uint8_t identifierConst(const spicy::Token& name);
+    void defineVariable(uint8_t global);
 };
 } // namespace spicy;
 

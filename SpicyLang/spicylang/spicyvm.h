@@ -4,7 +4,9 @@
 
 #include <vector>
 #include <tuple>
+#include <unordered_map>
 #include "vmtypes.h"
+#include "spicy.h"
 
 namespace spicy {
 
@@ -12,8 +14,10 @@ template<typename T>
 using Stack = std::vector<T>;
     
 class SpicyVM {
-    bool trace_execution;
     Stack<Stack<SpicyObj>> stack;
+    std::unordered_map<std::string, SpicyObj> globals;
+    
+    bool trace_execution;
     unsigned long current_stack = 0l;
     unsigned long program_counter = 0l;
 public:
@@ -26,9 +30,13 @@ private:
     
     void push(SpicyObj value);
     SpicyObj pop();
+    SpicyObj& peek(int distance);
     
-    std::string printStack();
+    void printStack();
+    void runtimeError(const std::string& msg, const Chunk& chunk);
+    
 };
+
 
 }// namespace spicy
 

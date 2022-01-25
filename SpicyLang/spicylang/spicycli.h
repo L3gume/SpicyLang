@@ -13,19 +13,19 @@ struct SpicyConfig {
     //bool dump_ast = false;
     bool help = false;
     bool treewalk = false;
+    bool trace = false;
     std::string script_path = "";
     
-    friend SpicyConfig operator+(SpicyConfig lhs, SpicyConfig rhs) {
+    friend SpicyConfig operator+(const SpicyConfig& lhs, const SpicyConfig& rhs) {
         return SpicyConfig{
             lhs.is_repl || rhs.is_repl,
             lhs.dump_bytecode || rhs.dump_bytecode,
             lhs.help || rhs.help,
             lhs.treewalk || rhs.treewalk,
+            lhs.trace || rhs.trace,
             rhs.script_path
         };
     }
-    
-    
 };
 
 namespace parsers {
@@ -39,12 +39,14 @@ namespace parsers {
             if (flag == "bytecode") conf.dump_bytecode = true;
             if (flag == "help") conf.help = true;
             if (flag == "treewalk") conf.treewalk = true;
+            if (flag == "trace") conf.trace = true;
             return conf;
             },
             match_string("repl")
                 | match_string("bytecode")
                 | match_string("help")
-                | match_string("treewalk"));
+                | match_string("treewalk")
+                | match_string("trace"));
     }
     
     parser_t<SpicyConfig> parseArg() {
@@ -79,7 +81,7 @@ static SpicyConfig parseArguments(const int argc, const char* argv[]) {
     auto res = parsers::parseArgs(args);
     if (!res.has_value()) {
         std::cerr << "failed to parse arguments." << '\n';
-        return { false, false, true, false, "" };
+        return { false, false, true, false, false, "" };
     }
     return res.value().first;
 }

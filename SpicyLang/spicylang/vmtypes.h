@@ -40,7 +40,7 @@ class Chunk {
 public:
     enum class OpCode {
         OP_CONSTANT,
-        OP_NULL,
+        OP_NIL,
         OP_TRUE,
         OP_FALSE,
         OP_POP,
