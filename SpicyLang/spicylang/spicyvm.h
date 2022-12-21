@@ -18,14 +18,15 @@ class SpicyVM {
     std::unordered_map<std::string, SpicyObj> globals;
     
     bool trace_execution;
+    bool is_repl;
     unsigned long current_stack = 0l;
     unsigned long program_counter = 0l;
 public:
-    explicit SpicyVM(bool trace_execution);
+    explicit SpicyVM(bool trace_execution, bool is_repl);
     void disassemble(const Chunk& chunk);
     void execute(const Chunk& chunk);
 private:
-    void reset();
+    void reset(bool is_repl);
     [[nodiscard]] uint8_t readByte(const Chunk& chunk);
     
     void push(SpicyObj value);

@@ -5,8 +5,10 @@
 #include <format>
 
 namespace spicy {
-    SpicyVM::SpicyVM(bool trace_execution) 
-        : trace_execution(trace_execution) {}
+    SpicyVM::SpicyVM(bool trace_execution, bool is_repl) 
+        : trace_execution(trace_execution), is_repl(is_repl) {
+        reset(false);
+    }
     
     void SpicyVM::disassemble(const Chunk& chunk) {
         chunk.disassemble("TODO");
@@ -14,7 +16,7 @@ namespace spicy {
     
     // TODO: return type for status?
     void SpicyVM::execute(const Chunk& chunk) {
-        reset();
+        reset(is_repl);
         
         auto binary = [&](auto op) {
             if (!std::holds_alternative<double>(peek(0)) ||
@@ -81,6 +83,26 @@ namespace spicy {
                 push(globals[name]);
                 break;
             }
+            case Chunk::OpCode::OP_SET_GLOBAL: {
+                const auto& constants = chunk.getConstants();
+                const auto& name = std::get<std::string>(constants[readByte(chunk)]);
+                if (!globals.contains(name)) {
+                    runtimeError(std::format("Undefined variable [{}].", name), chunk);
+                    return;
+                }
+                globals[name] = peek(0);
+                break;
+            }
+            case Chunk::OpCode::OP_GET_LOCAL: {
+                const auto slot = readByte(chunk);
+                push(stack[current_stack][slot]);
+                break;
+            }
+            case Chunk::OpCode::OP_SET_LOCAL: {
+                const auto slot = readByte(chunk);
+                stack[current_stack][slot] = peek(0);
+                break;
+            }
             case Chunk::OpCode::OP_EQUAL: {
                 auto&& b = pop();
                 auto&& a = pop();
@@ -129,9 +151,11 @@ namespace spicy {
         }
     }
     
-    void SpicyVM::reset() {
+    void SpicyVM::reset(bool is_repl) {
         current_stack = 0l;
         program_counter = 0l;
+        if (is_repl) { return; }
+        
         stack.clear();
         stack.emplace_back(Stack<SpicyObj>{});
         globals.clear();
@@ -167,6 +191,6 @@ namespace spicy {
     
     void SpicyVM::runtimeError(const std::string& msg, const Chunk& chunk) {
         error(chunk.getLine(program_counter - 1), msg);
-        reset();
+        reset(false);
     }
 }

@@ -8,42 +8,42 @@ namespace spicy {
 SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner)) {
     m_rules[TokenType::APPEND]          = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::APPEND_FRONT]    = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::LEFT_PAREN]      = { [&]() { this->grouping(); }, std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::LEFT_PAREN]      = { [&](bool) { this->grouping(); }, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::RIGHT_PAREN]     = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::LEFT_BRACE]      = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::RIGHT_BRACE]     = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::COMMA]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::DOT]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::MINUS]           = { [&]() { this->unary(); } , [&]() { this->binary(); }, Precedence::PREC_TERM };
-    m_rules[TokenType::PLUS]            = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_TERM };
+    m_rules[TokenType::MINUS]           = { [&](bool) { this->unary(); } , [&](bool) { this->binary(); }, Precedence::PREC_TERM };
+    m_rules[TokenType::PLUS]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_TERM };
     m_rules[TokenType::SEMICOLON]       = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::SLASH]           = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_FACTOR };
-    m_rules[TokenType::STAR]            = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_FACTOR };
-    m_rules[TokenType::BANG]            = { [&]() { this->unary(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::BANG_EQUAL]      = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_EQUALITY };
+    m_rules[TokenType::SLASH]           = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_FACTOR };
+    m_rules[TokenType::STAR]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_FACTOR };
+    m_rules[TokenType::BANG]            = { [&](bool) { this->unary(); } , std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::BANG_EQUAL]      = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_EQUALITY };
     m_rules[TokenType::EQUAL]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::EQUAL_EQUAL]     = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_EQUALITY };
-    m_rules[TokenType::GREATER]         = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::GREATER_EQUAL]   = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::LESS]            = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::LESS_EQUAL]      = { std::nullopt, [&]() { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::IDENTIFIER]      = { [&]() { this->variable(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::STRING]          = { [&]() { this->string(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::NUMBER]          = { [&]() { this->number(); } , std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::EQUAL_EQUAL]     = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_EQUALITY };
+    m_rules[TokenType::GREATER]         = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
+    m_rules[TokenType::GREATER_EQUAL]   = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
+    m_rules[TokenType::LESS]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
+    m_rules[TokenType::LESS_EQUAL]      = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
+    m_rules[TokenType::IDENTIFIER]      = { [&](bool canAssign) { this->variable(canAssign); } , std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::STRING]          = { [&](bool) { this->string(); } , std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::NUMBER]          = { [&](bool) { this->number(); } , std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::AND]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::CLASS]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::ELSE]            = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::FALSE]           = { [&]() { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::FALSE]           = { [&](bool) { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::FOR]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::FUN]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::IF]              = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::NIL]             = { [&]() { this->literal(); } , std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::NIL]             = { [&](bool) { this->literal(); } , std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::OR]              = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::PRINT]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::RETURN]          = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::SUPER]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::THIS]            = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::TRUE]            = { [&]() { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::TRUE]            = { [&](bool) { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::VAR]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::WHILE]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::ERROR]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
@@ -189,7 +189,8 @@ void SpicyCompiler::parsePrecedence(Precedence prec) {
         return;
     }
     const auto& prefixRule = prefixRuleOpt.value();
-    prefixRule();
+    const auto canAssign = prec <= Precedence::PREC_ASSIGNMENT;
+    prefixRule(canAssign);
     
     while (prec <= m_rules[m_current.type].precedence) {
         advance();
@@ -199,7 +200,11 @@ void SpicyCompiler::parsePrecedence(Precedence prec) {
             return;
         }
         const auto& infixRule = infixRuleOpt.value();
-        infixRule();
+        infixRule(canAssign);
+    }
+    
+    if (canAssign && match(TokenType::EQUAL)) {
+        error("Invalid assignment target.");
     }
 }
 
@@ -229,9 +234,22 @@ void SpicyCompiler::varDeclaration() {
 void SpicyCompiler::statement() {
     if (match(TokenType::PRINT)) {
         printStatement();
+    }
+    else if (match(TokenType::LEFT_BRACE)) {
+        beginScope();
+        block();
+        endScope();
     } else {
         expressionStatement();
     }
+}
+
+void SpicyCompiler::block() {
+    while (!check(TokenType::RIGHT_BRACE) && !check(TokenType::END_OF_FILE)) {
+        declaration();
+    }
+    
+    consume(TokenType::RIGHT_BRACE, "Expected '}' at the end of block.");
 }
 
 void SpicyCompiler::printStatement() {
@@ -250,13 +268,28 @@ void SpicyCompiler::expression() {
     parsePrecedence(Precedence::PREC_ASSIGNMENT);
 }
 
-void SpicyCompiler::variable() {
-    namedVariable(m_previous);
+void SpicyCompiler::variable(bool canAssign) {
+    namedVariable(m_previous, canAssign);
 }
 
-void SpicyCompiler::namedVariable(const spicy::Token& name) {
-    const auto arg = identifierConst(name);
-    emitBytes(Chunk::OpCode::OP_GET_GLOBAL, arg);
+void SpicyCompiler::namedVariable(const spicy::Token& name, bool canAssign) {
+    Chunk::OpCode getOp, setOp;
+    const auto arg = resolveLocal(name);
+    if (arg != -1) {
+        getOp = Chunk::OpCode::OP_GET_LOCAL;
+        setOp = Chunk::OpCode::OP_SET_LOCAL;
+    } else {
+        arg = identifierConst(name);
+        getOp = Chunk::OpCode::OP_GET_GLOBAL;
+        setOp = Chunk::OpCode::OP_SET_GLOBAL;
+    }
+    
+    if (canAssign && match(TokenType::EQUAL)) {
+        expression();
+        emitBytes(setOp, arg);
+    } else {
+		emitBytes(getOp, arg);
+    }
 }
 
 void SpicyCompiler::number() {
@@ -318,8 +351,26 @@ void SpicyCompiler::string() {
     }
 }
 
+void SpicyCompiler::beginScope() {
+    m_scopeDepth++; 
+}
+
+void SpicyCompiler::endScope() {
+    m_scopeDepth--;
+    const auto erased = std::erase_if(m_locals, [&](const Local& local) { return local.depth > m_scopeDepth; });
+    for (auto i = 0; i < erased; ++i) {
+        emitByte(Chunk::OpCode::OP_POP);
+    }
+}
+
 uint8_t SpicyCompiler::parseVar(const std::string& errMsg) {
     consume(TokenType::IDENTIFIER, errMsg);
+    
+    declareVariable();
+    if (m_scopeDepth > 0) {
+        return 0;
+    }
+    
     return identifierConst(m_previous);
 }
 
@@ -327,8 +378,52 @@ uint8_t SpicyCompiler::identifierConst(const spicy::Token& name) {
     return uint8_t(makeConstant(name.lexeme));
 }
 
+void SpicyCompiler::declareVariable() {
+    if (m_scopeDepth == 0) {
+        return;
+    }
+    
+    const auto& name = m_previous;
+    for (int i = m_locals.size() - 1; i >= 0; --i) {
+        const auto& local = m_locals[i];
+        if (local.depth != -1 && local.depth < m_scopeDepth) {
+            break;
+        }
+        if (name.lexeme == local.name.lexeme) {
+            error(std::format("Variable [{}] is alread defined in this scope.", name.lexeme));
+        }
+    }
+    addLocal(name);
+}
+
 void SpicyCompiler::defineVariable(uint8_t global) {
+    if (m_scopeDepth > 0) {
+        markInitialized;
+        return;
+    }
+    
     emitBytes(Chunk::OpCode::OP_DEFINE_GLOBAL, global);
+}
+
+void SpicyCompiler::addLocal(const spicy::Token& name) {
+    m_locals.emplace_back(Local{ .name = name, .depth = -1 });
+}
+
+void SpicyCompiler::markInitialized() {
+    m_locals.back().depth = m_scopeDepth;
+}
+
+uint32_t SpicyCompiler::resolveLocal(const spicy::Token& name)
+{
+    for (auto i = m_locals.size() - 1; i >= 0; --i) {
+        if (name.lexeme == m_locals[i].name.lexeme) {
+            if (m_locals[i].depth == -1) {
+                error(std::format("Can't read variable [{}] during in its own initializer.", name.lexeme));
+            }
+            return i;
+        }
+    }
+    return -1;
 }
 
 }

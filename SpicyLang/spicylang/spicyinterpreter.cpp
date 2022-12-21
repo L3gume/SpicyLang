@@ -44,7 +44,7 @@ void SpicyInterpreter::runByteCode() {
 
 void SpicyInterpreter::repl() {
     auto line = std::string{};
-    SpicyVM vm(true);
+    SpicyVM vm(true, true);
     getNextLine(line);
     while (line != "exit();") {
         SpicyScanner scanner(line);

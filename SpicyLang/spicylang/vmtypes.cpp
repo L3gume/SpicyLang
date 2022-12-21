@@ -64,6 +64,12 @@ size_t spicy::Chunk::disassembleInstruction(size_t offset) const noexcept {
         return disassembleConstantInstruction("OP_DEFINE_GLOBAL", offset);
     case OpCode::OP_GET_GLOBAL:
         return disassembleConstantInstruction("OP_GET_GLOBAL", offset);
+    case OpCode::OP_SET_GLOBAL:
+        return disassembleConstantInstruction("OP_SET_GLOBAL", offset);
+    case OpCode::OP_GET_LOCAL:
+        return disassembleByteInstruction("OP_GET_LOCAL", offset);
+    case OpCode::OP_SET_LOCAL:
+        return disassembleByteInstruction("OP_SET_LOCAL", offset);
     case OpCode::OP_NIL:
         return disassembleSimpleInstruction("OP_NIL", offset);
     case OpCode::OP_TRUE:

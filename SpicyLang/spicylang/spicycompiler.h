@@ -25,25 +25,26 @@ enum class Precedence {
     PREC_PRIMARY
 };
 
-using ParseFn = std::optional<std::function<void()>>;
+using ParseFn = std::optional<std::function<void(bool)>>;
 struct ParseRule {
     ParseFn prefix;
     ParseFn infix;
     Precedence precedence;
 };
 
-class SpicyCompiler {
-    SpicyScanner m_scanner;
-    Chunk m_chunk;
+struct Local {
+    Token name;
+    int32_t depth;
+};
 
-    Token m_previous;
-    Token m_current;
-    std::map<TokenType, ParseRule> m_rules;
-    bool m_hadError = false;
-    bool m_panicMode = false;
+class SpicyCompiler {
+    
 public:
     explicit SpicyCompiler(SpicyScanner scanner);
-    [[nodiscard]] Chunk compile();
+    
+    [[nodiscard]] 
+    auto compile() -> Chunk;
+    
 private:
     void advance();
     void consume(TokenType type, const std::string& errMsg);
@@ -70,12 +71,13 @@ private:
     void declaration();
     void varDeclaration();
     void statement();
+    void block();
     void printStatement();
     void expressionStatement();
     
     void expression();
-    void variable();
-    void namedVariable(const spicy::Token& name);
+    void variable(bool canAssign);
+    void namedVariable(const spicy::Token& name, bool canAssign);
     void number();
     void literal();
     void grouping();
@@ -83,9 +85,36 @@ private:
     void binary();
     void string();
     
-    [[nodiscard]] uint8_t parseVar(const std::string& errMsg);
-    [[nodiscard]] uint8_t identifierConst(const spicy::Token& name);
+    void beginScope();
+    void endScope();
+    
+    [[nodiscard]] 
+    uint8_t parseVar(const std::string& errMsg);
+    [[nodiscard]] 
+    uint8_t identifierConst(const spicy::Token& name);
+    void declareVariable();
     void defineVariable(uint8_t global);
+    void addLocal(const spicy::Token& name);
+    void markInitialized();
+    uint32_t resolveLocal(const spicy::Token& name);
+    
+private: 
+    // Scanner and output
+    SpicyScanner m_scanner;
+    Chunk m_chunk;
+
+    // Parser;
+    Token m_previous;
+    Token m_current;
+    std::map<TokenType, ParseRule> m_rules;
+    
+    // Scoping
+    std::vector<Local> m_locals;
+    uint32_t m_scopeDepth = 0u;
+    
+    // Util
+    bool m_hadError = false;
+    bool m_panicMode = false;
 };
 } // namespace spicy;
 
