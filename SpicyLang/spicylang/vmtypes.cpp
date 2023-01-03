@@ -100,6 +100,12 @@ size_t spicy::Chunk::disassembleInstruction(size_t offset) const noexcept {
         return disassembleSimpleInstruction("OP_NOT", offset);
     case OpCode::OP_POP:
         return disassembleSimpleInstruction("OP_POP", offset);
+    case OpCode::OP_JUMP:
+        return disassembleJumpInstruction("OP_JUMP", 1, offset);
+    case OpCode::OP_JUMP_IF_FALSE:
+        return disassembleJumpInstruction("OP_JUMP_IF_FALSE", 1, offset);
+    case OpCode::OP_LOOP:
+        return disassembleJumpInstruction("OP_LOOP", -1, offset);
     default:
         std::cout << std::format("Unknown opcode: {}\n", static_cast<uint8_t>(instr));
         return offset + simple_instruction_size;

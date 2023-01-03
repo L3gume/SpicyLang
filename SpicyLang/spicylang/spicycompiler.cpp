@@ -30,7 +30,7 @@ SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner
     m_rules[TokenType::IDENTIFIER]      = { [&](bool canAssign) { this->variable(canAssign); } , std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::STRING]          = { [&](bool) { this->string(); } , std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::NUMBER]          = { [&](bool) { this->number(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::AND]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::AND]             = { std::nullopt, [&](bool) { this->and_(); }, Precedence::PREC_AND };
     m_rules[TokenType::CLASS]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::ELSE]            = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::FALSE]           = { [&](bool) { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
@@ -38,7 +38,7 @@ SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner
     m_rules[TokenType::FUN]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::IF]              = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::NIL]             = { [&](bool) { this->literal(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::OR]              = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
+    m_rules[TokenType::OR]              = { std::nullopt, [&](bool) { this->or_(); }, Precedence::PREC_OR };
     m_rules[TokenType::PRINT]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::RETURN]          = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
     m_rules[TokenType::SUPER]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
@@ -123,6 +123,37 @@ void SpicyCompiler::emitReturn() {
 
 void SpicyCompiler::emitConstant(SpicyObj constant) {
     emitBytes(static_cast<uint8_t>(Chunk::OpCode::OP_CONSTANT), makeConstant(constant));
+}
+
+void SpicyCompiler::emitLoop(uint32_t loopStart) {
+    emitByte(Chunk::OpCode::OP_LOOP);
+
+    auto offset = m_chunk.getBytecodeCount() - loopStart + 2;
+    if (offset > std::numeric_limits<uint16_t>::max()) {
+        error("Too much code to jump over in loop.");
+    }
+    
+    emitByte((offset >> 8) & 0xff);
+    emitByte(offset & 0xff);
+}
+
+uint16_t SpicyCompiler::emitJump(Chunk::OpCode byte) {
+    emitByte(byte);
+    // emit temporary offset (two bytes) to be set later when the proper values are known
+    emitByte(0xff);
+    emitByte(0xff);
+    return m_chunk.getBytecodeCount() - 2;
+}
+
+void SpicyCompiler::patchJump(uint16_t offset) {
+    auto jump = m_chunk.getBytecodeCount() - offset - 2;
+    
+    if (jump > std::numeric_limits<uint16_t>::max()) {
+        error("Too much code to jump over.");
+    }
+    
+    m_chunk.setBytecodeValue(offset, (jump >> 8) & 0xff);
+    m_chunk.setBytecodeValue(offset + 1, (jump) & 0xff);
 }
 
 uint8_t SpicyCompiler::makeConstant(SpicyObj constant) {
@@ -234,8 +265,13 @@ void SpicyCompiler::varDeclaration() {
 void SpicyCompiler::statement() {
     if (match(TokenType::PRINT)) {
         printStatement();
-    }
-    else if (match(TokenType::LEFT_BRACE)) {
+    } else if (match(TokenType::IF)) {
+        ifStatement();
+    } else if (match(TokenType::WHILE)) {
+        whileStatement();
+    } else if (match(TokenType::FOR)) {
+        forStatement();
+    } else if (match(TokenType::LEFT_BRACE)) {
         beginScope();
         block();
         endScope();
@@ -258,6 +294,85 @@ void SpicyCompiler::printStatement() {
     emitByte(Chunk::OpCode::OP_PRINT);
 }
 
+void SpicyCompiler::ifStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+    
+    auto thenJump = emitJump(Chunk::OpCode::OP_JUMP_IF_FALSE);
+    emitByte(Chunk::OpCode::OP_POP);
+    statement();
+    
+    auto elseJump = emitJump(Chunk::OpCode::OP_JUMP);
+    patchJump(thenJump);
+    emitByte(Chunk::OpCode::OP_POP);
+    
+    if (match(TokenType::ELSE)) statement();
+    patchJump(elseJump);
+}
+
+void SpicyCompiler::whileStatement() {
+    auto loopStart = m_chunk.getBytecodeCount();
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
+    expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+    
+    auto exitJump = emitJump(Chunk::OpCode::OP_JUMP_IF_FALSE);
+    emitByte(Chunk::OpCode::OP_POP);
+    statement();
+    emitLoop(loopStart);
+    
+    patchJump(exitJump);
+    emitByte(Chunk::OpCode::OP_POP);
+}
+
+void SpicyCompiler::forStatement() {
+    beginScope();
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+    //consume(TokenType::SEMICOLON, "Expect ';'.");
+    if (match(TokenType::SEMICOLON)) {
+        // no initializer
+    } else if (match(TokenType::VAR)) {
+        varDeclaration();
+    } else {
+        // this looks for a ';' at the end and also emits a pop instruction, which is what we want
+        expressionStatement();
+    }
+    auto loopStart = m_chunk.getBytecodeCount();
+    auto exitJump = -1;
+    
+    if (!match(TokenType::SEMICOLON)) {
+        expression();
+        consume(TokenType::SEMICOLON, "Expect ';' after loop condition.");
+
+        exitJump = emitJump(Chunk::OpCode::OP_JUMP_IF_FALSE);
+        emitByte(Chunk::OpCode::OP_POP);
+    }
+    
+    if (!match(TokenType::RIGHT_PAREN)) {
+        auto bodyJump = emitJump(Chunk::OpCode::OP_JUMP);
+        auto incStart = m_chunk.getBytecodeCount();
+        
+        expression();
+        
+        emitByte(Chunk::OpCode::OP_POP);
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after 'for' clauses.");
+
+        emitLoop(loopStart);
+        loopStart = incStart;
+        patchJump(bodyJump);
+    }
+    
+    statement();
+    emitLoop(loopStart);
+    
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        emitByte(Chunk::OpCode::OP_POP);
+    }
+    endScope();
+}
+
 void SpicyCompiler::expressionStatement() {
     expression();
     consume(TokenType::SEMICOLON, "Expect ';' after expression.");
@@ -274,7 +389,7 @@ void SpicyCompiler::variable(bool canAssign) {
 
 void SpicyCompiler::namedVariable(const spicy::Token& name, bool canAssign) {
     Chunk::OpCode getOp, setOp;
-    const auto arg = resolveLocal(name);
+    auto arg = resolveLocal(name);
     if (arg != -1) {
         getOp = Chunk::OpCode::OP_GET_LOCAL;
         setOp = Chunk::OpCode::OP_SET_LOCAL;
@@ -351,6 +466,24 @@ void SpicyCompiler::string() {
     }
 }
 
+void SpicyCompiler::and_() {
+    auto endJump = emitJump(Chunk::OpCode::OP_JUMP_IF_FALSE);
+    emitByte(Chunk::OpCode::OP_POP);
+    parsePrecedence(Precedence::PREC_AND);
+    patchJump(endJump);
+}
+
+void SpicyCompiler::or_() {
+    auto elseJump = emitJump(Chunk::OpCode::OP_JUMP_IF_FALSE);
+    auto endJump = emitJump(Chunk::OpCode::OP_JUMP);
+    
+    patchJump(elseJump);
+    emitByte(Chunk::OpCode::OP_POP);
+    
+    parsePrecedence(Precedence::PREC_OR);
+    patchJump(endJump);
+}
+
 void SpicyCompiler::beginScope() {
     m_scopeDepth++; 
 }
@@ -398,7 +531,7 @@ void SpicyCompiler::declareVariable() {
 
 void SpicyCompiler::defineVariable(uint8_t global) {
     if (m_scopeDepth > 0) {
-        markInitialized;
+        markInitialized();
         return;
     }
     
@@ -415,7 +548,7 @@ void SpicyCompiler::markInitialized() {
 
 uint32_t SpicyCompiler::resolveLocal(const spicy::Token& name)
 {
-    for (auto i = m_locals.size() - 1; i >= 0; --i) {
+    for (auto i = static_cast<int>(m_locals.size()) - 1; i >= 0; --i) {
         if (name.lexeme == m_locals[i].name.lexeme) {
             if (m_locals[i].depth == -1) {
                 error(std::format("Can't read variable [{}] during in its own initializer.", name.lexeme));

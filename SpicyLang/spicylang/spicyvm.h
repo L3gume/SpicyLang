@@ -28,6 +28,7 @@ public:
 private:
     void reset(bool is_repl);
     [[nodiscard]] uint8_t readByte(const Chunk& chunk);
+    [[nodiscard]] uint16_t readShort(const Chunk& chunk);
     
     void push(SpicyObj value);
     SpicyObj pop();

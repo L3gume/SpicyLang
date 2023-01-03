@@ -144,6 +144,22 @@ namespace spicy {
             case Chunk::OpCode::OP_PRINT:
                 std::cout << '\n' << getObjString(pop()) << '\n';
                 break;
+            case Chunk::OpCode::OP_JUMP: {
+                program_counter += readShort(chunk);
+                break;
+            }
+            case Chunk::OpCode::OP_JUMP_IF_FALSE: {
+                auto offset = readShort(chunk);
+                if (!isTrue(peek(0))) {
+                    program_counter += offset;
+                }
+                break;
+            }
+            case Chunk::OpCode::OP_LOOP: {
+                auto offset = readShort(chunk);
+                program_counter -= offset;
+                break;
+            }
             case Chunk::OpCode::OP_RETURN:
                 //std::cout << '\n' << getObjString(pop()) << '\n';
                 return;
@@ -164,6 +180,13 @@ namespace spicy {
     uint8_t SpicyVM::readByte(const Chunk& chunk) {
 		const auto& code = chunk.getBytecode();
         return code[program_counter++];
+    }
+
+    uint16_t SpicyVM::readShort(const Chunk& chunk) {
+        const auto& code = chunk.getBytecode();
+        auto b1 = code[program_counter++];
+        auto b2 = code[program_counter++];
+        return static_cast<uint16_t>((b2 << 8) | b1);
     }
     
     void SpicyVM::push(SpicyObj value) {

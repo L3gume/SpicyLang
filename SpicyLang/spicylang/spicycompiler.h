@@ -58,6 +58,10 @@ private:
     void emitBytes(Chunk::OpCode byte1, Chunk::OpCode byte2);
     void emitReturn();
     void emitConstant(SpicyObj constant);
+    void emitLoop(uint32_t loopStart);
+    uint16_t emitJump(Chunk::OpCode byte);
+    
+    void patchJump(uint16_t offset);
 
     [[nodiscard]] uint8_t makeConstant(SpicyObj constant);
     
@@ -73,6 +77,9 @@ private:
     void statement();
     void block();
     void printStatement();
+    void ifStatement();
+    void whileStatement();
+    void forStatement();
     void expressionStatement();
     
     void expression();
@@ -84,6 +91,8 @@ private:
     void unary();
     void binary();
     void string();
+    void and_();
+    void or_();
     
     void beginScope();
     void endScope();
