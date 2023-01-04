@@ -53,9 +53,7 @@ SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner
 Chunk SpicyCompiler::compile() {
     m_chunk = Chunk(); // reset the current chunk
     advance();
-    //expression();
-    ////consume(TokenType::END_OF_FILE, "Expect EOF.");
-    //emitReturn();
+    
     while (!match(TokenType::END_OF_FILE)) {
         declaration();
     }
@@ -153,7 +151,7 @@ void SpicyCompiler::patchJump(uint16_t offset) {
     }
     
     m_chunk.setBytecodeValue(offset, (jump >> 8) & 0xff);
-    m_chunk.setBytecodeValue(offset + 1, (jump) & 0xff);
+    m_chunk.setBytecodeValue(offset + 1, jump & 0xff);
 }
 
 uint8_t SpicyCompiler::makeConstant(SpicyObj constant) {

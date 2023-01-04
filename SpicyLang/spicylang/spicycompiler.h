@@ -29,7 +29,7 @@ using ParseFn = std::optional<std::function<void(bool)>>;
 struct ParseRule {
     ParseFn prefix;
     ParseFn infix;
-    Precedence precedence;
+    Precedence precedence = Precedence::PREC_NONE;
 };
 
 struct Local {

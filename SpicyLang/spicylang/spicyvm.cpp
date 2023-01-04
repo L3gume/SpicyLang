@@ -186,7 +186,7 @@ namespace spicy {
         const auto& code = chunk.getBytecode();
         auto b1 = code[program_counter++];
         auto b2 = code[program_counter++];
-        return static_cast<uint16_t>((b2 << 8) | b1);
+        return static_cast<uint16_t>((b1 << 8) | b2);
     }
     
     void SpicyVM::push(SpicyObj value) {
@@ -194,6 +194,8 @@ namespace spicy {
     }
     
     SpicyObj SpicyVM::pop() {
+        if (stack[current_stack].empty()) return {};
+        
         const auto value = stack[current_stack].back();
         stack[current_stack].pop_back();
         return value;
@@ -205,7 +207,7 @@ namespace spicy {
     }
     
     void SpicyVM::printStack() {
-        std::cout << "Stack" << '\t';
+        std::cout << "Stack: " << '\t';
         for (const auto& value : stack[current_stack]) {
             std::cout << std::format("[ {} ]", getObjString(value));
         }

@@ -105,8 +105,8 @@ void SpicyInterpreter::getNextLine(std::string& line) {
     line.clear();
     std::cout << ">> ";
     std::getline(std::cin, line);
-    if (!line.ends_with(';'))
-        line += ";";
+    if (!line.ends_with(';') && !line.ends_with('}'))
+        line += ";"; // just a quality of life thing
 }
 
 } // namespace spicy
