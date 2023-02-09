@@ -38,3 +38,4 @@ SpicyLang/Debug/
 *.tlog
 *.idb
 SpicyLang/x64/
+packages/
