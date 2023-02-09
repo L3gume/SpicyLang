@@ -55,7 +55,11 @@ void spicy::Chunk::setBytecodeValue(size_t offset, uint8_t byte) noexcept {
 size_t spicy::Chunk::disassembleInstruction(size_t offset) const noexcept {
     const auto line = getLine(offset);
     std::cout << std::format("{:04d} ", offset);
-    std::cout << std::format(offset > 0 && line == getLine(offset - 1) ? "\t| " : "{:4d} ", line);
+    if (offset > 0 && line == getLine(offset - 1)) {
+        std::cout << std::format("\t| ");
+    } else {
+        std::cout << std::format("{:4d} ", line);
+    }
     const auto instr = static_cast<OpCode>(bytecode[offset]);
     switch (instr) {
     case OpCode::OP_CONSTANT:

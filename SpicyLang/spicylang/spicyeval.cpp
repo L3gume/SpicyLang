@@ -390,7 +390,7 @@ OptSpicyObj SpicyEvaluator::execStmts(const std::vector<ast::StmtPtrVariant> &st
             result = execStmt(st);
             if (std::holds_alternative<ast::RetStmtPtr>(st) || result.has_value()) break;
         }
-    }  catch (const RuntimeError& err) {
+    } catch (const RuntimeError& err) {
         runtimeError(err);
     }
     return result;

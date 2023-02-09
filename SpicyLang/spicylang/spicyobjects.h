@@ -38,17 +38,19 @@ using SpicyObj = std::variant<
 using OptSpicyObj = std::optional<SpicyObj>;
 
 [[nodiscard]]
-bool areEqual(const SpicyObj& lhs, const SpicyObj& rhs);
+auto areEqual(const SpicyObj& lhs, const SpicyObj& rhs) -> bool;
 
 [[nodiscard]]
-std::string getObjString(const SpicyObj& obj);
+auto isTrue(const SpicyObj& obj) -> bool;
 
 [[nodiscard]]
-bool isTrue(const SpicyObj& obj);
+auto getObjString(const SpicyObj& obj) -> std::string;
 
 namespace eval {
 class Environment;
 }
+
+class Chunk;
 
 class FuncObj : public util::Uncopyable {
     const ast::FuncExprPtr& m_decl;
@@ -56,19 +58,33 @@ class FuncObj : public util::Uncopyable {
     std::shared_ptr<eval::Environment> m_closure;
     bool m_isMethod;
     bool m_isInit;
+    
+    // TODO: for bytecode vm, improve this when moving bytecode gen to AST traversal instead of single pass Pratt parser
+    std::shared_ptr<Chunk> m_chunk;
 
 public:
-    FuncObj(const ast::FuncExprPtr& decl, const std::string& funcName,
-            std::shared_ptr<eval::Environment> closure, bool isMethod = false,
+    FuncObj(const ast::FuncExprPtr& decl,
+            const std::string& funcName,
+            std::shared_ptr<eval::Environment> closure,
+            bool isMethod = false,
             bool isInit = false);
-    [[nodiscard]] size_t arity() const;
-    [[nodiscard]] std::shared_ptr<eval::Environment> getClosure() const;
-    [[nodiscard]] const ast::FuncExprPtr& getDecl() const;
-    [[nodiscard]] std::vector<ast::StmtPtrVariant>& getBodyStmts() const;
-    [[nodiscard]] const std::string& getFuncName() const;
-    [[nodiscard]] bool isMethod() const;
-    [[nodiscard]] bool isInit() const;
-    [[nodiscard]] const std::vector<Token>& getParams() const;
+    
+    [[nodiscard]] 
+    auto arity()        const -> size_t;
+    [[nodiscard]] 
+    auto getClosure()   const -> std::shared_ptr<eval::Environment>;
+    [[nodiscard]] 
+    auto getDecl()      const -> const ast::FuncExprPtr&;
+    [[nodiscard]] 
+    auto getBodyStmts() const -> std::vector<ast::StmtPtrVariant>&;
+    [[nodiscard]] 
+    auto getFuncName()  const -> const std::string&;
+    [[nodiscard]] 
+    auto isMethod()     const -> bool;
+    [[nodiscard]] 
+    auto isInit()       const -> bool;
+    [[nodiscard]] 
+    auto getParams()    const -> const std::vector<Token>&;
 };
 
 class BuiltinFunc : public util::Uncopyable {

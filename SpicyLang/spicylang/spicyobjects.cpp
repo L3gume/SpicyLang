@@ -71,7 +71,8 @@ bool isTrue(const SpicyObj &obj) {
 
 // ======================== FuncObj ================================
 FuncObj::FuncObj(const ast::FuncExprPtr &decl, const std::string &funcName, std::shared_ptr<eval::Environment> closure, bool isMethod, bool isInit)
-    : m_decl(decl), m_funcName(funcName), m_closure(closure), m_isMethod(isMethod), m_isInit(isInit) {}
+    : m_decl(decl), m_funcName(funcName), m_closure(closure), m_isMethod(isMethod), m_isInit(isInit), m_chunk(nullptr) {
+}
 
 size_t FuncObj::arity() const {
     return m_decl->parameters.size();

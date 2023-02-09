@@ -90,6 +90,24 @@ public:
     [[nodiscard]] std::vector<SpicyObj> getConstants() const noexcept;
 };
 
+enum class FuncType {
+    FUNCTION,
+    SCRIPT
+};
+
+struct Func {
+    SpicyObj object = nullptr;
+    int arity = 0;
+    Chunk chunk = {};
+    std::string name = "";
+};
+
+struct CallFrame {
+    Func function;
+    uint8_t instructionPtr;
+
+};
+
 }
 
 #endif

@@ -6,59 +6,63 @@
 namespace spicy {
 
 SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner)) {
-    m_rules[TokenType::APPEND]          = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::APPEND_FRONT]    = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::LEFT_PAREN]      = { [&](bool) { this->grouping(); }, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::RIGHT_PAREN]     = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::LEFT_BRACE]      = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::RIGHT_BRACE]     = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::COMMA]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::DOT]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::MINUS]           = { [&](bool) { this->unary(); } , [&](bool) { this->binary(); }, Precedence::PREC_TERM };
-    m_rules[TokenType::PLUS]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_TERM };
-    m_rules[TokenType::SEMICOLON]       = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::SLASH]           = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_FACTOR };
-    m_rules[TokenType::STAR]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_FACTOR };
-    m_rules[TokenType::BANG]            = { [&](bool) { this->unary(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::BANG_EQUAL]      = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_EQUALITY };
-    m_rules[TokenType::EQUAL]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::EQUAL_EQUAL]     = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_EQUALITY };
-    m_rules[TokenType::GREATER]         = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::GREATER_EQUAL]   = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::LESS]            = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::LESS_EQUAL]      = { std::nullopt, [&](bool) { this->binary(); }, Precedence::PREC_COMPARISON };
-    m_rules[TokenType::IDENTIFIER]      = { [&](bool canAssign) { this->variable(canAssign); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::STRING]          = { [&](bool) { this->string(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::NUMBER]          = { [&](bool) { this->number(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::AND]             = { std::nullopt, [&](bool) { this->and_(); }, Precedence::PREC_AND };
-    m_rules[TokenType::CLASS]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::ELSE]            = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::FALSE]           = { [&](bool) { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::FOR]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::FUN]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::IF]              = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::NIL]             = { [&](bool) { this->literal(); } , std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::OR]              = { std::nullopt, [&](bool) { this->or_(); }, Precedence::PREC_OR };
-    m_rules[TokenType::PRINT]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::RETURN]          = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::SUPER]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::THIS]            = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::TRUE]            = { [&](bool) { this->literal(); }, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::VAR]             = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::WHILE]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::ERROR]           = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-    m_rules[TokenType::END_OF_FILE]     = { std::nullopt, std::nullopt, Precedence::PREC_NONE };
-}
+    /*
+     * This monstrosity is all the rules for our Pratt parser
+     */
+    m_rules[TokenType::APPEND]          = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::APPEND_FRONT]    = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::LEFT_PAREN]      = { [&](bool) { this->grouping(); },    std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::RIGHT_PAREN]     = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::LEFT_BRACE]      = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::RIGHT_BRACE]     = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::COMMA]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::DOT]             = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::MINUS]           = { [&](bool) { this->unary(); },       [&](bool) { this->binary(); },  Precedence::PREC_TERM };
+    m_rules[TokenType::PLUS]            = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_TERM };
+    m_rules[TokenType::SEMICOLON]       = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::SLASH]           = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_FACTOR };
+    m_rules[TokenType::STAR]            = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_FACTOR };
+    m_rules[TokenType::BANG]            = { [&](bool) { this->unary(); },       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::BANG_EQUAL]      = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_EQUALITY };
+    m_rules[TokenType::EQUAL]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::EQUAL_EQUAL]     = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_EQUALITY };
+    m_rules[TokenType::GREATER]         = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_COMPARISON };
+    m_rules[TokenType::GREATER_EQUAL]   = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_COMPARISON };
+    m_rules[TokenType::LESS]            = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_COMPARISON };
+    m_rules[TokenType::LESS_EQUAL]      = { std::nullopt,                       [&](bool) { this->binary(); },  Precedence::PREC_COMPARISON };
+    m_rules[TokenType::STRING]          = { [&](bool) { this->string(); },      std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::NUMBER]          = { [&](bool) { this->number(); },      std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::AND]             = { std::nullopt,                       [&](bool) { this->and_(); },    Precedence::PREC_AND };
+    m_rules[TokenType::CLASS]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::ELSE]            = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::FALSE]           = { [&](bool) { this->literal(); },     std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::FOR]             = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::FUN]             = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::IF]              = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::NIL]             = { [&](bool) { this->literal(); },     std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::OR]              = { std::nullopt,                       [&](bool) { this->or_(); },     Precedence::PREC_OR };
+    m_rules[TokenType::PRINT]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::RETURN]          = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::SUPER]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::THIS]            = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::TRUE]            = { [&](bool) { this->literal(); },     std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::VAR]             = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::WHILE]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::ERROR]           = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::END_OF_FILE]     = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::IDENTIFIER]      = { [&](bool canAssign) { this->variable(canAssign); }, std::nullopt,   Precedence::PREC_NONE }; }
 
-Chunk SpicyCompiler::compile() {
-    m_chunk = Chunk(); // reset the current chunk
+auto SpicyCompiler::compile() -> Func {
+    m_function = { .object = nullptr, .arity = 0, .chunk = {}, .name = "" };
+    //m_locals.emplace_back({ .name = { .type = TokenType::ERROR, .lexeme = "", .literal = std::nullopt, .line = -1 }, .depth = 0});
+    //m_chunk = Chunk(); // reset the current chunk
     advance();
     
     while (!match(TokenType::END_OF_FILE)) {
         declaration();
     }
     
-    return m_chunk;
+    return m_function;
 }
 
 void SpicyCompiler::advance() {
@@ -93,7 +97,7 @@ bool SpicyCompiler::check(TokenType type) {
 // ===============================================================================================================================
 
 void SpicyCompiler::emitByte(uint8_t byte) {
-    m_chunk.appendByte(byte, m_previous.line);
+    m_function.chunk.appendByte(byte, m_previous.line);
 }
 
 void SpicyCompiler::emitByte(Chunk::OpCode byte) {
@@ -480,6 +484,10 @@ void SpicyCompiler::or_() {
     
     parsePrecedence(Precedence::PREC_OR);
     patchJump(endJump);
+}
+
+void SpicyCompiler::noop() {
+    // noOp
 }
 
 void SpicyCompiler::beginScope() {

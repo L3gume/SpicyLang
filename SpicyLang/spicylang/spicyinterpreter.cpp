@@ -49,7 +49,8 @@ void SpicyInterpreter::repl() {
     while (line != "exit();") {
         SpicyScanner scanner(line);
         SpicyCompiler compiler(scanner);
-        vm.execute(compiler.compile());
+        auto func = compiler.compile();
+        vm.execute(func.chunk);
         getNextLine(line);
     }
 }

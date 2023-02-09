@@ -63,6 +63,9 @@
     <ClCompile Include="spicylang\spicycompiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="spicylang\spicycodegen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="spicylang\parsers.h">
@@ -122,5 +125,11 @@
     <ClInclude Include="spicylang\spicycli.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="spicylang\spicycodegen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

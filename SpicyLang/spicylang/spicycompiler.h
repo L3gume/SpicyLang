@@ -43,7 +43,7 @@ public:
     explicit SpicyCompiler(SpicyScanner scanner);
     
     [[nodiscard]] 
-    auto compile() -> Chunk;
+    auto compile() -> Func;
     
 private:
     void advance();
@@ -93,6 +93,7 @@ private:
     void string();
     void and_();
     void or_();
+    void noop();
     
     void beginScope();
     void endScope();
@@ -116,6 +117,10 @@ private:
     Token m_previous;
     Token m_current;
     std::map<TokenType, ParseRule> m_rules;
+    
+    // Current function for handling top-level and function calls
+    Func m_function;
+    FuncType m_funcType = FuncType::SCRIPT;
     
     // Scoping
     std::vector<Local> m_locals;

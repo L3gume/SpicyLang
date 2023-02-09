@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.props" Condition="Exists('..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -78,9 +79,23 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Projects\vcpkg\installed\x64-windows\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>true</VcpkgEnabled>
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
+    <VcpkgManifestInstall>true</VcpkgManifestInstall>
+    <VcpkgAutoLink>true</VcpkgAutoLink>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>..\..\vcpkg\installed\x64-windows\include</VcpkgInstalledDir>
+    <VcpkgUseMD>false</VcpkgUseMD>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -148,6 +163,7 @@
     <ClCompile Include="spicylang\spicyast.cpp" />
     <ClCompile Include="spicylang\spicyastprinter.cpp" />
     <ClCompile Include="spicylang\spicybuiltins.cpp" />
+    <ClCompile Include="spicylang\spicycodegen.cpp" />
     <ClCompile Include="spicylang\spicycompiler.cpp" />
     <ClCompile Include="spicylang\spicyenvironment.cpp" />
     <ClCompile Include="spicylang\spicyeval.cpp" />
@@ -167,6 +183,7 @@
     <ClInclude Include="spicylang\spicyastprinter.h" />
     <ClInclude Include="spicylang\spicybuiltins.h" />
     <ClInclude Include="spicylang\spicycli.h" />
+    <ClInclude Include="spicylang\spicycodegen.h" />
     <ClInclude Include="spicylang\spicycompiler.h" />
     <ClInclude Include="spicylang\spicyenvironment.h" />
     <ClInclude Include="spicylang\spicyerrors.h" />
@@ -181,7 +198,18 @@
     <ClInclude Include="spicylang\types.h" />
     <ClInclude Include="spicylang\vmtypes.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.targets" Condition="Exists('..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.props'))" />
+    <Error Condition="!Exists('..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\vcpkg.D.Projects.vcpkg.1.0.0\build\native\vcpkg.D.Projects.vcpkg.targets'))" />
+  </Target>
 </Project>
