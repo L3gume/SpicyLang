@@ -158,13 +158,14 @@ ast::ExprPtrVariant SpicyParser::call() {
     return expr;
 }
 
-ast::ExprPtrVariant SpicyParser::primary() {
+ast::ExprPtrVariant SpicyParser::primary()
+{
     if (match(TokenType::FALSE)) return ast::createLiteralEPV("false");
     if (match(TokenType::TRUE)) return ast::createLiteralEPV("true");
     if (match(TokenType::NIL)) return ast::createLiteralEPV("nil");
     if (match(TokenType::LIST)) return ast::createLiteralEPV("<spicy_list>");
 
-    if (match({TokenType::NUMBER, TokenType::STRING}))
+    if (match({ TokenType::NUMBER, TokenType::STRING }))
         return ast::createLiteralEPV(previous().literal);
 
     if (match(TokenType::SUPER)) {
@@ -174,14 +175,17 @@ ast::ExprPtrVariant SpicyParser::primary() {
         return ast::createSuperEPV(keyword, method);
     }
 
-    if (match(TokenType::FUN))
+    if (match(TokenType::FUN) || match(TokenType::BACKSLASH)) {
         return lambdaFunction();
+    }
 
-    if (match(TokenType::THIS))
+    if (match(TokenType::THIS)) {
         return ast::createThisEPV(previous());
+    }
 
-    if (match(TokenType::IDENTIFIER))
+    if (match(TokenType::IDENTIFIER)) {
         return ast::createVarEPV(previous());
+    }
 
     if (match(TokenType::LEFT_PAREN)) {
         auto expr = expression();
@@ -204,9 +208,21 @@ ast::ExprPtrVariant SpicyParser::lambdaFunction() {
     } while (match(TokenType::COMMA));
     }
     consume(TokenType::RIGHT_PAREN, "Expect ')' after lambda parameters.");
-    consume(TokenType::LEFT_BRACE, "Expect '{' before lambda body.");
-    auto body = block();
-    return ast::createFuncEPV(std::move(params), std::move(body));
+    
+    // block body
+    if (match(TokenType::LEFT_BRACE)) {
+        auto body = block();
+        return ast::createFuncEPV(std::move(params), std::move(body));
+    }
+
+    // single expression body
+    if (match(TokenType::ARROW)) {
+        const auto& arrow = previous();
+        auto expr = expression();
+        return ast::createFuncEPV(std::move(params), std::move(std::vector{ ast::createRetSPV(arrow, std::move(expr)) }));
+    }
+    
+    throw error(peek(), "Expected function body");
 }
 
 ast::StmtPtrVariant SpicyParser::statement() {

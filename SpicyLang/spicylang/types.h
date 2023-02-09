@@ -13,7 +13,7 @@ enum class TokenType {
     // single-character tokens
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
-    COLON, LEFT_BRACKET, RIGHT_BRACKET,
+    COLON, LEFT_BRACKET, RIGHT_BRACKET, PIPE, BACKSLASH,
     // one of two character tokens
     BANG, BANG_EQUAL,
     EQUAL, EQUAL_EQUAL,
@@ -21,6 +21,7 @@ enum class TokenType {
     LESS, LESS_EQUAL,
     APPEND, APPEND_FRONT,
     PLUS_PLUS, MINUS_MINUS,
+    ARROW,
     // literals
     IDENTIFIER, STRING, NUMBER, LIST,
     // keywords

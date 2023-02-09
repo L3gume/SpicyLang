@@ -79,7 +79,13 @@ void SpicyScanner::scanToken() {
             addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG); 
             break;
         case '=':
-            addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); 
+            if (match('=')) {
+                addToken(TokenType::EQUAL_EQUAL); 
+            } else if (match('>')) {
+                addToken(TokenType::ARROW);
+            } else {
+                addToken(TokenType::EQUAL);
+            }
             break;
         case '<':
             if (match('=')) {
@@ -100,6 +106,8 @@ void SpicyScanner::scanToken() {
                 addToken(TokenType::SLASH);
             }
             break;
+        case '|': addToken(TokenType::PIPE); break;
+        case '\\': addToken(TokenType::BACKSLASH); break;
         case ' ':
         case '\r':
         case '\t':
