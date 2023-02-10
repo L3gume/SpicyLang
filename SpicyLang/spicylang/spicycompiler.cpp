@@ -9,8 +9,8 @@ SpicyCompiler::SpicyCompiler(SpicyScanner scanner) : m_scanner(std::move(scanner
     /*
      * This monstrosity is all the rules for our Pratt parser
      */
-    m_rules[TokenType::APPEND]          = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
-    m_rules[TokenType::APPEND_FRONT]    = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::ARROW]          = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
+    m_rules[TokenType::RARROW]    = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
     m_rules[TokenType::LEFT_PAREN]      = { [&](bool) { this->grouping(); },    std::nullopt,                   Precedence::PREC_NONE };
     m_rules[TokenType::RIGHT_PAREN]     = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };
     m_rules[TokenType::LEFT_BRACE]      = { std::nullopt,                       std::nullopt,                   Precedence::PREC_NONE };

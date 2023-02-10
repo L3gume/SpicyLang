@@ -93,7 +93,7 @@ ast::ExprPtrVariant SpicyParser::comparison() {
 
 ast::ExprPtrVariant SpicyParser::append() {
     auto expr = term();
-    while (match({TokenType::APPEND, TokenType::APPEND_FRONT})) {
+    while (match({TokenType::ARROW, TokenType::RARROW})) {
         const auto& op = previous();
         auto rhs = term();
         expr = ast::createBinaryEPV(std::move(expr), op, std::move(rhs));
@@ -131,9 +131,37 @@ ast::ExprPtrVariant SpicyParser::unary() {
 }
 
 ast::ExprPtrVariant SpicyParser::postfix() {
-    auto expr = call();
+    auto expr = chain();
     while (match({ TokenType::PLUS_PLUS, TokenType::MINUS_MINUS })) {
         expr = ast::createPostfixEPV(std::move(expr), previous());
+    }
+    return expr;
+}
+
+ast::ExprPtrVariant SpicyParser::chain() {
+    auto expr = call();
+    if (match(TokenType::PIPE)) {
+        // function chaining operation:
+        // (f | g)(x) is equivalent to f(g(x)) and is desugared as:
+        // (\(x') -> f(g(x')))(x)
+        // the extra lambda is necessary in case the chained functions aren't immediately called
+        const auto& pipe = previous();
+        
+        auto tok = Token(TokenType::IDENTIFIER, "__anon__no__collide", std::nullopt, pipe.line);
+        auto args_ = std::vector<ast::ExprPtrVariant>{};
+        args_.emplace_back(ast::createVarEPV(tok));
+        
+        auto expr2 = ast::createCallEPV(expression(), pipe, std::move(args_));
+        auto args = std::vector<ast::ExprPtrVariant>{};
+        args.emplace_back(std::move(expr2));
+        
+        auto call = ast::createCallEPV(std::move(expr), pipe, std::move(args));
+        auto prog = std::vector<ast::StmtPtrVariant>{};
+        prog.emplace_back(ast::createRetSPV(pipe, std::move(call)));
+        
+        auto params = std::vector<Token>{};
+        params.emplace_back(tok);
+        return ast::createFuncEPV(std::move(params), std::move(prog));
     }
     return expr;
 }
@@ -143,7 +171,7 @@ ast::ExprPtrVariant SpicyParser::call() {
     while (true) {
         if (match(TokenType::LEFT_PAREN)) {
             expr = finishCall(std::move(expr));
-        } else if (match(TokenType::DOT)){
+        } else if (match(TokenType::DOT)) {
             const auto name = consume(TokenType::IDENTIFIER, "Expect prop name after '.'.");
             expr = ast::createGetEPV(std::move(expr), name);
         } else if (match(TokenType::LEFT_BRACKET)) {
@@ -216,10 +244,12 @@ ast::ExprPtrVariant SpicyParser::lambdaFunction() {
     }
 
     // single expression body
-    if (match(TokenType::ARROW)) {
+    if (match(TokenType::RARROW)) {
         const auto& arrow = previous();
         auto expr = expression();
-        return ast::createFuncEPV(std::move(params), std::move(std::vector{ ast::createRetSPV(arrow, std::move(expr)) }));
+        auto prog = std::vector<ast::StmtPtrVariant>{};
+        prog.emplace_back(ast::createRetSPV(arrow, std::move(expr)));
+        return ast::createFuncEPV(std::move(params), std::move(prog));
     }
     
     throw error(peek(), "Expected function body");
@@ -358,10 +388,28 @@ ast::StmtPtrVariant SpicyParser::functionDeclaration(const std::string &kind) {
         } while (match(TokenType::COMMA));
     }
     consume(TokenType::RIGHT_PAREN, "Expect ')' after " + kind + " parameters.");
-    consume(TokenType::LEFT_BRACE, "Expect '{' before " + kind + " body.");
-    auto body = block();
-    auto func = ast::createFuncEPV(std::move(params), std::move(body));
-    return ast::createFuncSPV(name, std::move(std::get<ast::FuncExprPtr>(func)));
+    
+    // block body
+    if (match(TokenType::LEFT_BRACE)) {
+        auto body = block();
+        auto func = ast::createFuncEPV(std::move(params), std::move(body));
+        return ast::createFuncSPV(name, std::move(std::get<ast::FuncExprPtr>(func)));
+    }
+
+    // single expression body
+    if (match(TokenType::RARROW)) {
+        const auto& arrow = previous();
+        auto expr = expression();
+        
+        consume(TokenType::SEMICOLON, "Expect ';' after shortand function declaration.");
+        
+        auto prog = std::vector<ast::StmtPtrVariant>{};
+        prog.emplace_back(ast::createRetSPV(arrow, std::move(expr)));
+        auto func = ast::createFuncEPV(std::move(params), std::move(prog));
+        return ast::createFuncSPV(name, std::move(std::get<ast::FuncExprPtr>(func)));
+    }
+    
+    throw error(peek(), "Expected function body");
 }
 
 ast::StmtPtrVariant SpicyParser::classDeclaration() {

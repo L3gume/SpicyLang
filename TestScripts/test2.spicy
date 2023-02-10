@@ -1,0 +1,33 @@
+fn plus2(x) -> x + 2;
+fn times2(x) -> x * 2;
+fn half(x) -> x / 2;
+
+fn map(ls, f) {
+  var ret = [];
+  for (var i = 0; i < len(ls); i = i + 1) {
+    ret <- f(ls[i]);
+  }
+  return ret;
+}
+
+var times4 = times2 | times2;
+
+// this:
+//var i = ((\(x) -> x + 10) | half | times2)(4);
+// Should be equivalent to:
+//var j = half(times2(4));
+// but the AST would be more like:
+//var k = (\(x) -> half(times2(x)))(4);
+//var l = times4(4);
+
+var lst = [];
+lst <- 1 <- 2 <- 3;
+print lst;
+var Plus2Times2half = map(lst, plus2 | half | times2 | plus2);
+print Plus2Times2half;
+
+
+//print i;
+//print j;
+//print k;
+//print l;

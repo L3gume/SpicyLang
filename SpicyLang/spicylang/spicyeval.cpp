@@ -28,14 +28,23 @@ void checkPlusOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs) {
 }
 
 void checkAppendOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs) {
-    if (op.type == TokenType::APPEND) {
+    if (op.type == TokenType::ARROW) {
         if (!std::holds_alternative<SpicyListSharedPtr>(lhs))
             throw RuntimeError(op, "Can only append elements to lists.");
     }
-    else if (op.type == TokenType::APPEND_FRONT) {
+    else if (op.type == TokenType::RARROW) {
         if (!std::holds_alternative<SpicyListSharedPtr>(rhs))
             throw RuntimeError(op, "Can only append elements to lists.");
     }
+}
+
+void checkPipeOperands(Token op, const SpicyObj& lhs, const SpicyObj& rhs)
+{
+    if (!std::holds_alternative<FuncSharedPtr>(lhs))
+        throw RuntimeError(op, "Left hand side of chain operation isn't a function.");
+    
+    if (!std::holds_alternative<FuncSharedPtr>(rhs))
+        throw RuntimeError(op, "Right hand side of chain operation isn't a function.");
 }
 }
 
@@ -188,18 +197,22 @@ SpicyObj SpicyEvaluator::evalBinaryExpr(const ast::BinaryExprPtr &expr) {
         return !areEqual(lval, rval);
     case TokenType::EQUAL_EQUAL:
         return areEqual(lval, rval);
-    case TokenType::APPEND: {
+    case TokenType::ARROW: {
             typecheck::checkAppendOperands(expr->op, lval, rval);
             auto lst = std::get<SpicyListSharedPtr>(lval);
             lst->append(expr->op, rval);
             return lst;
         }
-    case TokenType::APPEND_FRONT: {
+    case TokenType::RARROW: {
             typecheck::checkAppendOperands(expr->op, lval, rval);
             auto lst = std::get<SpicyListSharedPtr>(rval);
             lst->appendFront(expr->op, lval);
             return lst;
         }
+    //case TokenType::PIPE: {
+    //    typecheck::checkPipeOperands(expr->op, lval, rval);
+    //    return std::make_shared<FuncObj>();
+    //}
     default:
         throw RuntimeError(expr->op, "Unexpected operator in binary expression.");
     }

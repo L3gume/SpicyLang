@@ -20,6 +20,7 @@ SpicyInterpreter::SpicyInterpreter(const std::string& scriptPath)
 
 void SpicyInterpreter::runTreeWalk() {
     try {
+        std::cout << "runTreeWalk()\n";
         loadScript();
         SpicyScanner scanner(m_sRawScript);
         SpicyParser parser(scanner.scanTokens());
@@ -72,6 +73,18 @@ void SpicyInterpreter::replLegacy() {
             runtimeError(err);
         }
         getNextLine(line);
+    }
+}
+
+void SpicyInterpreter::dumpAST() {
+    std::cout << "dumpAST()\n";
+    loadScript();
+    SpicyScanner scanner(m_sRawScript);
+    SpicyParser parser(scanner.scanTokens());
+    m_program = std::move(parser.parseProgram());
+    for (const auto& stmt : m_program) {
+        for (const auto& str : ast::printer::toString(stmt))
+        std::cout << str << '\n';
     }
 }
 

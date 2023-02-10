@@ -46,6 +46,7 @@ private:
     ast::ExprPtrVariant equality();
     ast::ExprPtrVariant comparison();
     ast::ExprPtrVariant append();
+    ast::ExprPtrVariant chain();
     ast::ExprPtrVariant term();
     ast::ExprPtrVariant factor();
     ast::ExprPtrVariant unary();

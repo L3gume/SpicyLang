@@ -115,7 +115,7 @@ auto printFuncExpr(const FuncExprPtr& expr) -> std::string {
             funcStr += str + "\n";
         }
     }
-    funcStr += "\n}";
+    funcStr += "}";
     return funcStr;
 }
 

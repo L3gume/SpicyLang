@@ -28,6 +28,8 @@ public:
     void repl();
     void replLegacy();
 
+    void dumpAST();
+    
     bool hadError();
     bool hadRuntimeError();
     

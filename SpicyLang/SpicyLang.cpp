@@ -18,6 +18,7 @@ int main(const int argc, const char* argv[]) {
         std::cout << "--bytecode\tdump bytecode" << '\n';
         std::cout << "--treewalk\texecute using treewalk interpreter" << '\n';
         std::cout << "--trace\t\ttrace execution of the bytecode" << '\n';
+        std::cout << "--ast\t\tdump ast (treewalk only)" << '\n';
         std::cout << "--help\t\tdisplay this message" << '\n';
     };
     const auto config = spicy::parseArguments(argc, argv);
@@ -34,6 +35,8 @@ int main(const int argc, const char* argv[]) {
         spicy::SpicyInterpreter interpreter(config.script_path);
         if (config.treewalk) {
             interpreter.runTreeWalk();
+        } else if (config.dump_ast) {
+            interpreter.dumpAST();
         } else {
             interpreter.runByteCode();
         }

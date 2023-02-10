@@ -21,7 +21,8 @@ SpicyScanner::SpicyScanner(const std::string& source) : m_source(source) {
     m_keywords["true"] = TokenType::TRUE;
     m_keywords["var"] = TokenType::VAR;
     m_keywords["while"] = TokenType::WHILE;
-    m_keywords["fun"] = TokenType::FUN;
+    m_keywords["fn"] = TokenType::FUN;
+    m_keywords["import"] = TokenType::IMPORT;
 }
 
 std::vector<Token> SpicyScanner::scanTokens() {
@@ -62,7 +63,7 @@ void SpicyScanner::scanToken() {
         case '.': addToken(TokenType::DOT); break;
         case '-': 
             if (match('>')) {
-                addToken(TokenType::APPEND_FRONT); 
+                addToken(TokenType::RARROW); 
             } else if (match('-')) {
                 addToken(TokenType::MINUS_MINUS);
             } else {
@@ -80,9 +81,7 @@ void SpicyScanner::scanToken() {
             break;
         case '=':
             if (match('=')) {
-                addToken(TokenType::EQUAL_EQUAL); 
-            } else if (match('>')) {
-                addToken(TokenType::ARROW);
+                addToken(TokenType::EQUAL_EQUAL);
             } else {
                 addToken(TokenType::EQUAL);
             }
@@ -91,7 +90,7 @@ void SpicyScanner::scanToken() {
             if (match('=')) {
                 addToken(TokenType::LESS_EQUAL);
             } else if (match('-')) {
-                addToken(TokenType::APPEND);
+                addToken(TokenType::ARROW);
             } else {
                 addToken(TokenType::LESS); 
             }
