@@ -1,0 +1,14 @@
+fn map(ls, f) {
+  var ret = [];
+  for (var i = 0; i < len(ls); i++) {
+    ret <- f(ls[i]);
+  }
+  return ret;
+}
+
+fn plus(x) -> \(n) -> n + x;
+fn times(x) -> \(n) -> n * x;
+
+var lst = [];
+lst <- 1 <- 2 <- 3;
+print map(lst, plus(5) | times(2) | plus(1));
