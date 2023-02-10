@@ -145,6 +145,8 @@ ast::ExprPtrVariant SpicyParser::chain() {
         // (f | g)(x) is equivalent to f(g(x)) and is desugared as:
         // (\(x') -> f(g(x')))(x)
         // the extra lambda is necessary in case the chained functions aren't immediately called
+        // not to confuse with f | g(x); this will give:
+        // \(x') -> f(g(x)(x')) and will fail at runtime if the result of g(x) isn't a function
         const auto& pipe = previous();
         
         auto tok = Token(TokenType::IDENTIFIER, "__anon__no__collide", std::nullopt, pipe.line);

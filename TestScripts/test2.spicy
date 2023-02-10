@@ -1,10 +1,10 @@
-fn plus2(x) -> x + 2;
-fn times2(x) -> x * 2;
+fn plus(x) -> \(n) -> n + x;
+fn times(x) -> \(n) -> n * x;
 fn half(x) -> x / 2;
 
 fn map(ls, f) {
   var ret = [];
-  for (var i = 0; i < len(ls); i = i + 1) {
+  for (var i = 0; i < len(ls); i++) {
     ret <- f(ls[i]);
   }
   return ret;
@@ -23,8 +23,8 @@ var times4 = times2 | times2;
 var lst = [];
 lst <- 1 <- 2 <- 3;
 print lst;
-var Plus2Times2half = map(lst, plus2 | half | times2 | plus2);
-print Plus2Times2half;
+var thing = map(lst, plus(5) | times(2) | plus(1));
+print thing;
 
 
 //print i;
